@@ -26,7 +26,9 @@ if (minetest.get_modpath("doc") and minetest.get_modpath("doc_items")) then
 	dofile(modpath.."/reveal.lua")
 end
 
-if (minetest.get_modpath("sfinv") and minetest.global_exists("sfinv")) and sfinv.enabled then
+if (minetest.get_modpath("sway") and minetest.global_exists("sway")) and sway.enabled then
+	dofile(modpath.."/sway.lua")
+elseif (minetest.get_modpath("sfinv") and minetest.global_exists("sfinv")) and sfinv.enabled then
 	dofile(modpath.."/sfinv.lua")
 end
 

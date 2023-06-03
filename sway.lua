@@ -1,5 +1,8 @@
+local sfcg = sfcg
+local minetest, sway = minetest, sway
 local S = sfcg.get_translator
 local esc = minetest.formspec_escape
+local gui = sway.widgets
 
 
 local function coords(i, cols)
@@ -76,33 +79,51 @@ local function recipe_fs(fs, data)
 	item_button_fs(fs, 4, 1, recipe.output, recipe.output:match("%S*"))
 end
 
+local function CraftguideImageButton(name, tooltip)
+	return gui.VBox{
+		gui.ImageButton{
+			w = 0.8, h = 0.8,
+			texture_name = "craftguide_" .. name .. "_icon.png",
+			name = name,
+			label = "",
+		},
+		gui.Tooltip{ tooltip_text = tooltip, gui_element_name = name }
+	}
+end
 
-local function get_formspec(player)
+local function get_formspec(player, context)
+	print("sfcg get_formspec", dump(sfcg.player_data))
 	local name = player:get_player_name()
-	local data = sfcg.player_data[name]
+	local data = sfcg.player_data[name] or { items = {}, pagenum = 1 }
 	data.pagemax = math.max(1, math.ceil(#data.items / 32))
 
-	local fs = {}
-	table.insert(fs,
-		"style_type[item_image_button;padding=2]"..
-		"field[0.3,4.2;2.8,1.2;filter;;"..esc(data.filter).."]"..
-		"label[5.8,4.15;"..minetest.colorize("yellow", data.pagenum).." / "..
-			data.pagemax.."]"..
-		"image_button[2.63,4.05;0.8,0.8;craftguide_search_icon.png;search;]"..
-		"image_button[3.25,4.05;0.8,0.8;craftguide_clear_icon.png;clear;]"..
-		"image_button[5,4.05;0.8,0.8;craftguide_prev_icon.png;prev;]"..
-		"image_button[7.25,4.05;0.8,0.8;craftguide_next_icon.png;next;]"..
-		"tooltip[search;"..esc(S("Search")).."]"..
-		"tooltip[clear;"..esc(S("Reset")).."]"..
-		"tooltip[prev;"..esc(S("Previous page")).."]"..
-		"tooltip[next;"..esc(S("Next page")).."]"..
-		"field_close_on_enter[filter;false]")
+	local fs = {
+		expand = true,
+		gui.StyleType{
+			selectors = { "item_image_button" },
+			props = { padding = 2 }
+		},
+		gui.HBox{
+			gui.Field{ name = "filter", default = data.filter },
+			CraftguideImageButton("search", S("Search")),
+			CraftguideImageButton("clear", S("Reset")),
+			gui.Spacer{},
+			CraftguideImageButton("prev", S("Previous page")),
+			gui.Label{ label = minetest.colorize("yellow", data.pagenum).." / ".. data.pagemax },
+			CraftguideImageButton("next", S("Next page"))
+		},
+	}
 
 	if #data.items == 0 then
-		table.insert(fs, "label[3,2;"..esc(S("No items to show.")).."]")
+		fs[#fs+1] = gui.VBox{
+			align_v = "center",
+			align_h = "center",
+			expand = true,
+			gui.Label{ label = S("No items to show.") }
+		}
 	else
-
-    local item_button_fs = sfcg.item_button_fs
+		local items_rendered = {}
+		local item_button_fs = sfcg.item_button_fs
 
 		local first_item = (data.pagenum - 1) * 32
 		for i = first_item, first_item + 31 do
@@ -113,52 +134,58 @@ local function get_formspec(player)
 			local x, y = coords(i % 32, 8)
 			item_button_fs(fs, x, y, item, item)
 		end
+		fs[#fs+1] = gui.Flow(items_rendered)
 	end
 
-	table.insert(fs, "container[0,5.6]")
-	if data.recipes then
-		recipe_fs(fs, data)
-	elseif data.prev_item then
-		table.insert(fs, ("label[2,1;%s]"):format(esc(data.show_usages
-			and S("No usages.").."\n"..S("Click again to show recipes.")
-			or S("No recipes.").."\n"..S("Click again to show usages."))))
-	end
-	table.insert(fs, "container_end[]")
+	--table.insert(fs, "container[0,5.6]")
+	--if data.recipes then
+	--	recipe_fs(fs, data)
+	--elseif data.prev_item then
+	--	table.insert(fs, ("label[2,1;%s]"):format(esc(data.show_usages
+	--		and S("No usages.").."\n"..S("Click again to show recipes.")
+	--		or S("No recipes.").."\n"..S("Click again to show usages."))))
+	--end
+	--table.insert(fs, "container_end[]")
 
-	return table.concat(fs)
+	return gui.VBox(fs)
 end
 
 local orig_update_for_player = sfcg.update_for_player
 function sfcg.update_for_player(playername)
+	print("update_for_player pre", dump(sfcg))
 	local player = orig_update_for_player(playername)
-	if player then
-		sfinv.set_player_inventory_formspec(player)
+	print("update_for_player after", dump(sfcg))
+	if player and sway.enabled then
+		sway.set_player_inventory_formspec(player)
 	end
-  return player
+	return player
 end
 
-
-sfinv.register_page("sfcraftguide:craftguide", {
-	title = esc(S("Recipes")),
+-- BUG this code has a race condition. If two mods replace a widget, there needs to be a way to ensure they both play
+-- nice.
+local OldForm = gui.sway.Form
+function gui.sway.Form(fields)
+	local player = fields.player
+	local context = fields.context
+	return gui.HBox{
+		spacing = 0.25,
+		OldForm(fields),
+		(player and context) and gui.VBox{
+			bgimg = "sway_bg_full.png",
+			bgimg_middle = 12,
+			padding = 0.4,
+			get_formspec(player, context)
+		} or gui.Nil{}
+	}
+end
+sway.register_page("fsfcraftguide:craftguide", {
+	title = S("Recipes"),
 	get = function(self, player, context)
-		return sfinv.make_formspec(player, context, get_formspec(player))
-	end,
-	on_player_receive_fields = function(self, player, context, fields)
-		if sfcg.on_receive_fields(player, fields) then
-			sfinv.set_player_inventory_formspec(player)
-		end
+		--sfcg.update_for_player(player:get_player_name())
+		return gui.sway.Form{
+			player = player,
+			context = context,
+			get_formspec(player, context)
+		}
 	end
 })
-
-
-minetest.register_on_mods_loaded(function()
-
-  sfinv.pages["mtg_craftguide:craftguide"] = nil
-  for idx = #sfinv.pages_unordered, 1, -1 do
-    local page = sfinv.pages_unordered[idx]
-    if page.name == "mtg_craftguide:craftguide" then
-      table.remove(sfinv.pages_unordered, idx)
-    end
-  end
-
-end)

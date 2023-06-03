@@ -342,14 +342,14 @@ minetest.register_on_joinplayer(function(player)
 	local info = minetest.get_player_information(name)
 
 	local data = {
-    playername = name,
+		playername = name,
 		filter = "",
 		pagenum = 1,
 		items = sfcg.init_items,
 		lang_code = info.lang_code
 	}
-  sfcg.player_data[name] = data
-  sfcg.execute_search(data)
+	sfcg.player_data[name] = data
+	sfcg.execute_search(data)
 end)
 
 

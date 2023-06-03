@@ -1,20 +1,23 @@
-![luacheck](https://github.com/dacmot/sfcraftguide/actions/workflows/luacheck.yml/badge.svg)
+<!--![luacheck](https://github.com/dacmot/sfcraftguide/actions/workflows/luacheck.yml/badge.svg)-->
 
-sfcraftguide
-============
+# fsfcraftguide
 
-An augmented mtg_craftguide. Supports a progressive reveal system that follows the documentation mod item help.
+An augmented [mtg_craftguide]. Supports a progressive reveal system that follows the documentation mod item help. Uses [flow] to render the formspecs.
 
-Based on [mtg_craftguide](https://github.com/minetest/minetest_game), which itself is based on [craftguide](https://github.com/minetest-mods/craftguide).
+Based on [sfcraftguide] which itself is based on [mtg_craftguide], which is in turn based on [craftguide].
 
-Dependencies
----------------------
+[flow]: https://github.com/luk3yx/minetest-flow
+[sfcraftguide]: https://github.com/dacmot/sfcraftguide
+[mtg_craftguide]: https://github.com/minetest/minetest_game
+[craftguide]: https://github.com/minetest-mods/craftguide
+
+## Features
+
 Adds a "Recipes" tab to the sfinv inventory. Click an item to see it's recipes. Click again to show usages.
 
 Recipes reveal will be synchronized with the doc items discovered ([doc/help](https://forum.minetest.net/viewtopic.php?f=11&t=15912))
 
-Authors of media
-----------------
+## Authors of media
 
 paramat (CC BY-SA 3.0):
 
