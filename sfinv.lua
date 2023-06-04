@@ -1,4 +1,4 @@
-local S = sfcg.get_translator
+local S = fsfcg.get_translator
 local esc = minetest.formspec_escape
 
 
@@ -48,9 +48,9 @@ local function recipe_fs(fs, data)
 	local base_y = rows == 1 and 1 or 0
 
   -- Use local variables for faster execution in loop
-  local item_button_fs = sfcg.item_button_fs
-  local extract_groups = sfcg.extract_groups
-  local groups_to_item = sfcg.groups_to_item
+  local item_button_fs = fsfcg.item_button_fs
+  local extract_groups = fsfcg.extract_groups
+  local groups_to_item = fsfcg.groups_to_item
 
 	for i, item in pairs(recipe.items) do
 		local x, y = coords(i - 1, width)
@@ -79,7 +79,7 @@ end
 
 local function get_formspec(player)
 	local name = player:get_player_name()
-	local data = sfcg.player_data[name]
+	local data = fsfcg.player_data[name]
 	data.pagemax = math.max(1, math.ceil(#data.items / 32))
 
 	local fs = {}
@@ -102,7 +102,7 @@ local function get_formspec(player)
 		table.insert(fs, "label[3,2;"..esc(S("No items to show.")).."]")
 	else
 
-    local item_button_fs = sfcg.item_button_fs
+    local item_button_fs = fsfcg.item_button_fs
 
 		local first_item = (data.pagenum - 1) * 32
 		for i = first_item, first_item + 31 do
@@ -128,8 +128,8 @@ local function get_formspec(player)
 	return table.concat(fs)
 end
 
-local orig_update_for_player = sfcg.update_for_player
-function sfcg.update_for_player(playername)
+local orig_update_for_player = fsfcg.update_for_player
+function fsfcg.update_for_player(playername)
 	local player = orig_update_for_player(playername)
 	if player then
 		sfinv.set_player_inventory_formspec(player)
@@ -144,7 +144,7 @@ sfinv.register_page("sfcraftguide:craftguide", {
 		return sfinv.make_formspec(player, context, get_formspec(player))
 	end,
 	on_player_receive_fields = function(self, player, context, fields)
-		if sfcg.on_receive_fields(player, fields) then
+		if fsfcg.on_receive_fields(player, fields) then
 			sfinv.set_player_inventory_formspec(player)
 		end
 	end

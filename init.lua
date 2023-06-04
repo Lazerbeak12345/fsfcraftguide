@@ -1,7 +1,7 @@
 local S = minetest.get_translator(minetest.get_current_modname())
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 
-sfcg = {
+fsfcg = {
 	modpath = modpath,
 	get_translator = S,
 	player_data = {},
@@ -10,12 +10,12 @@ sfcg = {
 	usages_cache = {},
 }
 
-function sfcg.get_usages(data, item)
-	return sfcg.usages_cache[item]
+function fsfcg.get_usages(data, item)
+	return fsfcg.usages_cache[item]
 end
 
-function sfcg.get_recipes(data, item)
-	return sfcg.recipes_cache[item]
+function fsfcg.get_recipes(data, item)
+	return fsfcg.recipes_cache[item]
 end
 
 -- Loading components

@@ -1,3 +1,4 @@
+local fsfcg = fsfcg
 local revealed_cache = {}
 
 
@@ -55,8 +56,8 @@ local function revealed_show_recipe(recipe, playername)
 end
 
 
-local orig_get_usages = sfcg.get_usages
-function sfcg.get_usages(data, item)
+local orig_get_usages = fsfcg.get_usages
+function fsfcg.get_usages(data, item)
   local recipes = orig_get_usages(data, item)
   if not recipes then
     return
@@ -74,8 +75,8 @@ function sfcg.get_usages(data, item)
 end
 
 
-local orig_get_recipes = sfcg.get_recipes
-function sfcg.get_recipes(data, item)
+local orig_get_recipes = fsfcg.get_recipes
+function fsfcg.get_recipes(data, item)
   local recipes = orig_get_recipes(data, item)
   if not recipes then
     return
@@ -93,8 +94,8 @@ function sfcg.get_recipes(data, item)
 end
 
 
-local orig_execute_search = sfcg.execute_search
-function sfcg.execute_search(data)
+local orig_execute_search = fsfcg.execute_search
+function fsfcg.execute_search(data)
   -- Only needed if doc is an optional dependency
   --
   -- if not doc.data.players[data.playername] then
@@ -108,8 +109,8 @@ function sfcg.execute_search(data)
 
   local filtered_items = {}
   for _, item in ipairs(data.items) do
-    if sfcg.get_usages(data, item) or
-        sfcg.get_recipes(data, item) then
+    if fsfcg.get_usages(data, item) or
+        fsfcg.get_recipes(data, item) then
       table.insert(filtered_items, item)
     end
   end
@@ -120,7 +121,7 @@ end
 local async_update_users = {}
 local function async_update()
   for playername, _ in pairs(async_update_users) do
-    sfcg.update_for_player(playername)
+    fsfcg.update_for_player(playername)
     async_update_users[playername] = nil
   end
 end

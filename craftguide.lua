@@ -1,5 +1,7 @@
-local S = sfcg.get_translator
+local fsfcg = fsfcg
+local S = fsfcg.get_translator
 local esc = minetest.formspec_escape
+local gui = sway.widgets
 
 
 local group_stereotypes = {
@@ -47,13 +49,13 @@ local group_names = {
 }
 
 
-function sfcg.extract_groups(str)
+function fsfcg.extract_groups(str)
 	if str:sub(1, 6) == "group:" then
 		return str:sub(7):split()
 	end
 	return nil
 end
-local extract_groups = sfcg.extract_groups
+local extract_groups = fsfcg.extract_groups
 
 
 local function imatch(str, filter)
@@ -61,8 +63,8 @@ local function imatch(str, filter)
 end
 
 
-function sfcg.execute_search(data)
-  local init_items = sfcg.init_items
+function fsfcg.execute_search(data)
+  local init_items = fsfcg.init_items
 	local filter = data.filter
 	if filter == "" then
 		data.items = init_items
@@ -101,7 +103,7 @@ local function table_replace(t, val, new)
 end
 
 
-function sfcg.item_has_groups(item_groups, groups)
+function fsfcg.item_has_groups(item_groups, groups)
 	for _, group in ipairs(groups) do
 		if not item_groups[group] then
 			return false
@@ -109,10 +111,10 @@ function sfcg.item_has_groups(item_groups, groups)
 	end
 	return true
 end
-local item_has_groups = sfcg.item_has_groups
+local item_has_groups = fsfcg.item_has_groups
 
 
-function sfcg.groups_to_item(groups)
+function fsfcg.groups_to_item(groups)
 	if #groups == 1 then
 		local group = groups[1]
 		if group_stereotypes[group] then
@@ -138,7 +140,7 @@ local function get_craftable_recipes(output)
 		return nil
 	end
 
-  local groups_to_item = sfcg.groups_to_item
+  local groups_to_item = fsfcg.groups_to_item
   local reg_items = minetest.registered_items
 	for i = #recipes, 1, -1 do
 		for _, item in pairs(recipes[i].items) do
@@ -167,7 +169,7 @@ end
 local function cache_usages(recipe)
 
 	local added = {}
-  local usages_cache = sfcg.usages_cache
+  local usages_cache = fsfcg.usages_cache
   local reg_items = minetest.registered_items
 
 	for _, item in pairs(recipe.items) do
@@ -202,9 +204,16 @@ local function is_fuel(item)
 end
 
 
-function sfcg.item_button_fs(fs, x, y, item, element_name, groups)
-	table.insert(fs, ("item_image_button[%s,%s;1.05,1.05;%s;%s;%s]")
-		:format(x, y, item, element_name, groups and "\n"..esc(S("G")) or ""))
+function fsfcg.ItemButton(fields)
+	local item, element_name, groups = fields.item, fields.element_name, fields.groups
+	local fs = {
+		gui.ItemImageButton{
+			w = 1.05, h = 1.05,
+			item_name = item,
+			name = element_name,
+			groups and "\n" .. S("G") or ""
+		}
+	}
 
 	local tooltip
 	if groups then
@@ -224,21 +233,22 @@ function sfcg.item_button_fs(fs, x, y, item, element_name, groups)
 		tooltip = desc.."\n"..minetest.colorize("orange", S("Fuel"))
 	end
 	if tooltip then
-		table.insert(fs, ("tooltip[%s;%s]"):format(element_name, esc(tooltip)))
+		fs[#fs+1] = gui.Tooltip{ tooltip_text = tooltip, gui_element_name = element_name }
 	end
+	return gui.VBox(fs)
 end
 
 
-function sfcg.on_receive_fields(player, fields)
+function fsfcg.on_receive_fields(player, fields)
 	local name = player:get_player_name()
-	local data = sfcg.player_data[name]
+	local data = fsfcg.player_data[name]
 
 	if fields.clear then
 		data.filter = ""
 		data.pagenum = 1
 		data.prev_item = nil
 		data.recipes = nil
-		data.items = sfcg.init_items
+		data.items = fsfcg.init_items
 		return true
 
 	elseif fields.key_enter_field == "filter" or fields.search then
@@ -248,7 +258,7 @@ function sfcg.on_receive_fields(player, fields)
 		end
 		data.filter = new
 		data.pagenum = 1
-		sfcg.execute_search(data)
+		fsfcg.execute_search(data)
 		return true
 
 	elseif fields.prev or fields.next then
@@ -290,9 +300,9 @@ function sfcg.on_receive_fields(player, fields)
 			data.show_usages = nil
 		end
 		if data.show_usages then
-			data.recipes = sfcg.usages_cache[item]
+			data.recipes = fsfcg.usages_cache[item]
 		else
-			data.recipes = sfcg.recipes_cache[item]
+			data.recipes = fsfcg.recipes_cache[item]
 		end
 		data.prev_item = item
 		data.rnum = 1
@@ -301,10 +311,10 @@ function sfcg.on_receive_fields(player, fields)
 end
 
 
-function sfcg.update_for_player(playername)
+function fsfcg.update_for_player(playername)
 	local player = minetest.get_player_by_name(playername)
 	if player then
-		sfcg.execute_search(sfcg.player_data[playername])
+		fsfcg.execute_search(fsfcg.player_data[playername])
 	end
   return player
 end
@@ -312,9 +322,9 @@ end
 
 minetest.register_on_mods_loaded(function()
 
-  local recipes_cache = sfcg.recipes_cache
-  local usages_cache = sfcg.usages_cache
-  local init_items = sfcg.init_items
+  local recipes_cache = fsfcg.recipes_cache
+  local usages_cache = fsfcg.usages_cache
+  local init_items = fsfcg.init_items
 	for name, def in pairs(minetest.registered_items) do
 		if show_item(def) then
 			local recipes = get_craftable_recipes(name)
@@ -345,15 +355,15 @@ minetest.register_on_joinplayer(function(player)
 		playername = name,
 		filter = "",
 		pagenum = 1,
-		items = sfcg.init_items,
+		items = fsfcg.init_items,
 		lang_code = info.lang_code
 	}
-	sfcg.player_data[name] = data
-	sfcg.execute_search(data)
+	fsfcg.player_data[name] = data
+	fsfcg.execute_search(data)
 end)
 
 
 minetest.register_on_leaveplayer(function(player)
 	local name = player:get_player_name()
-	sfcg.player_data[name] = nil
+	fsfcg.player_data[name] = nil
 end)

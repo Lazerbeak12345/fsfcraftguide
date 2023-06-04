@@ -1,6 +1,5 @@
-local sfcg = sfcg
-local minetest, sway = minetest, sway
-local S = sfcg.get_translator
+local fsfcg, minetest, sway = fsfcg, minetest, sway
+local S = fsfcg.get_translator
 local esc = minetest.formspec_escape
 local gui = sway.widgets
 
@@ -10,7 +9,7 @@ local function coords(i, cols)
 end
 
 
-local function recipe_fs(fs, data)
+local function Recipe(fs, data)
 	local recipe = data.recipes[data.rnum]
 	local width = recipe.width
 	local cooktime, shapeless
@@ -51,9 +50,9 @@ local function recipe_fs(fs, data)
 	local base_y = rows == 1 and 1 or 0
 
   -- Use local variables for faster execution in loop
-  local item_button_fs = sfcg.item_button_fs
-  local extract_groups = sfcg.extract_groups
-  local groups_to_item = sfcg.groups_to_item
+	local ItemButton = fsfcg.ItemButton
+  local extract_groups = fsfcg.extract_groups
+  local groups_to_item = fsfcg.groups_to_item
 
 	for i, item in pairs(recipe.items) do
 		local x, y = coords(i - 1, width)
@@ -64,7 +63,7 @@ local function recipe_fs(fs, data)
 			item = groups_to_item(groups)
 			elem_name = esc(item.."."..table.concat(groups, "+"))
 		end
-		item_button_fs(fs, base_x + x, base_y + y, item, elem_name, groups)
+		ItemButton(fs, base_x + x, base_y + y, item, elem_name, groups)
 	end
 
 	if shapeless or recipe.method == "cooking" then
@@ -76,7 +75,7 @@ local function recipe_fs(fs, data)
 	end
 	table.insert(fs, "image[3,1;1,1;sfinv_crafting_arrow.png]")
 
-	item_button_fs(fs, 4, 1, recipe.output, recipe.output:match("%S*"))
+	ItemButton(fs, 4, 1, recipe.output, recipe.output:match("%S*"))
 end
 
 local function CraftguideImageButton(name, tooltip)
@@ -92,10 +91,10 @@ local function CraftguideImageButton(name, tooltip)
 end
 
 local function get_formspec(player, context)
-	print("sfcg get_formspec", dump(sfcg.player_data))
+	print("fsfcg get_formspec", dump(fsfcg.player_data))
 	local name = player:get_player_name()
-	local data = sfcg.player_data[name] or { items = {}, pagenum = 1 }
-	data.pagemax = math.max(1, math.ceil(#data.items / 32))
+	local data = fsfcg.player_data[name] or { items = {}, pagenum = 1 }
+	local w = 8
 
 	local fs = {
 		expand = true,
@@ -107,54 +106,50 @@ local function get_formspec(player, context)
 			gui.Field{ name = "filter", default = data.filter },
 			CraftguideImageButton("search", S("Search")),
 			CraftguideImageButton("clear", S("Reset")),
-			gui.Spacer{},
-			CraftguideImageButton("prev", S("Previous page")),
-			gui.Label{ label = minetest.colorize("yellow", data.pagenum).." / ".. data.pagemax },
-			CraftguideImageButton("next", S("Next page"))
 		},
 	}
 
 	if #data.items == 0 then
 		fs[#fs+1] = gui.VBox{
-			align_v = "center",
-			align_h = "center",
+			align_v = "center", align_h = "center",
 			expand = true,
 			gui.Label{ label = S("No items to show.") }
 		}
 	else
-		local items_rendered = {}
-		local item_button_fs = sfcg.item_button_fs
+		local items_rendered = { w = nil, h = 8, name = "pages" }
+		local ItemButton = fsfcg.ItemButton
 
-		local first_item = (data.pagenum - 1) * 32
-		for i = first_item, first_item + 31 do
-			local item = data.items[i + 1]
-			if not item then
-				break
+		local row = {}
+		for _, item in ipairs(data.items) do
+			row[#row+1] = ItemButton{ item = item, element_name = item }
+			if #row >= w then
+				items_rendered[#items_rendered+1] = gui.HBox(row)
+				row = {}
 			end
-			local x, y = coords(i % 32, 8)
-			item_button_fs(fs, x, y, item, item)
 		end
-		fs[#fs+1] = gui.Flow(items_rendered)
+		if #row > 0 then
+			items_rendered[#items_rendered+1] = gui.HBox(row)
+		end
+		fs[#fs+1] = gui.ScrollableVBox(items_rendered)
 	end
 
 	--table.insert(fs, "container[0,5.6]")
-	--if data.recipes then
-	--	recipe_fs(fs, data)
-	--elseif data.prev_item then
-	--	table.insert(fs, ("label[2,1;%s]"):format(esc(data.show_usages
-	--		and S("No usages.").."\n"..S("Click again to show recipes.")
-	--		or S("No recipes.").."\n"..S("Click again to show usages."))))
-	--end
-	--table.insert(fs, "container_end[]")
+	if data.recipes then
+		fs[#fs+1] = Recipe{data = data}
+	elseif data.prev_item then
+		fs[#fs+1] = gui.Label{
+			label = data.show_usages
+				and S("No usages.").."\n"..S("Click again to show recipes.")
+				or S("No recipes.").."\n"..S("Click again to show usages.")
+		}
+	end
 
 	return gui.VBox(fs)
 end
 
-local orig_update_for_player = sfcg.update_for_player
-function sfcg.update_for_player(playername)
-	print("update_for_player pre", dump(sfcg))
+local orig_update_for_player = fsfcg.update_for_player
+function fsfcg.update_for_player(playername)
 	local player = orig_update_for_player(playername)
-	print("update_for_player after", dump(sfcg))
 	if player and sway.enabled then
 		sway.set_player_inventory_formspec(player)
 	end
@@ -181,7 +176,6 @@ end
 sway.register_page("fsfcraftguide:craftguide", {
 	title = S("Recipes"),
 	get = function(self, player, context)
-		--sfcg.update_for_player(player:get_player_name())
 		return gui.sway.Form{
 			player = player,
 			context = context,
