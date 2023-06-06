@@ -1,15 +1,24 @@
 local fsfcg, minetest, sway = fsfcg, minetest, sway
 local S = fsfcg.get_translator
-local esc = minetest.formspec_escape
 local gui = sway.widgets
 
 
-local function coords(i, cols)
-	return i % cols, math.floor(i / cols)
+local function CraftguideImageButton(name, tooltip, on_event)
+	return gui.VBox{
+		gui.ImageButton{
+			w = 0.8, h = 0.8,
+			texture_name = "craftguide_" .. name .. "_icon.png",
+			name = name,
+			label = "",
+			on_event = on_event
+		},
+		gui.Tooltip{ tooltip_text = tooltip, gui_element_name = name }
+	}
 end
 
 
-local function Recipe(fs, data)
+local function Recipe(fields)
+	local data = fields.data
 	local recipe = data.recipes[data.rnum]
 	local width = recipe.width
 	local cooktime, shapeless
@@ -26,75 +35,82 @@ local function Recipe(fs, data)
 			width = 3
 		end
 	end
-
-	table.insert(fs, ("label[5.5,1;%s]"):format(esc(data.show_usages
-		and S("Usage @1 of @2", data.rnum, #data.recipes)
-		or S("Recipe @1 of @2", data.rnum, #data.recipes))))
-
-	if #data.recipes > 1 then
-		table.insert(fs,
-			"image_button[5.5,1.6;0.8,0.8;craftguide_prev_icon.png;recipe_prev;]"..
-			"image_button[6.2,1.6;0.8,0.8;craftguide_next_icon.png;recipe_next;]"..
-			"tooltip[recipe_prev;"..esc(S("Previous recipe")).."]"..
-			"tooltip[recipe_next;"..esc(S("Next recipe")).."]")
-	end
-
 	local rows = math.ceil(table.maxn(recipe.items) / width)
-	if width > 3 or rows > 3 then
-		table.insert(fs, ("label[0,1;%s]")
-			:format(esc(S("Recipe is too big to be displayed."))))
-		return
-	end
 
-	local base_x = 3 - width
-	local base_y = rows == 1 and 1 or 0
+	local fs = {
+		gui.Label{
+			label = data.show_usages
+				and S("Usage @1 of @2", data.rnum, #data.recipes)
+				or S("Recipe @1 of @2", data.rnum, #data.recipes)
+		},
+		#data.recipes > 1 and gui.HBox{
+			-- TODO move callbacks to here
+			CraftguideImageButton("prev", S("Previous recipe")),
+			CraftguideImageButton("next", S("Next recipe"))
+		} or gui.Nil{},
+		(width > 3 or rows > 3) and gui.Label{ label = S("Recipe is too big to be displayed.") } or gui.Nil{}
+	}
 
-  -- Use local variables for faster execution in loop
+	-- Use local variables for faster execution in loop
 	local ItemButton = fsfcg.ItemButton
-  local extract_groups = fsfcg.extract_groups
-  local groups_to_item = fsfcg.groups_to_item
+	local extract_groups = fsfcg.extract_groups
+	local groups_to_item = fsfcg.groups_to_item
 
-	for i, item in pairs(recipe.items) do
-		local x, y = coords(i - 1, width)
-
+	local recipe_info = {}
+	local recipe_rows = {}
+	local recipe_row = {}
+	for _, item in pairs(recipe.items) do
 		local elem_name = item
 		local groups = extract_groups(item)
 		if groups then
 			item = groups_to_item(groups)
-			elem_name = esc(item.."."..table.concat(groups, "+"))
+			elem_name = item.."."..table.concat(groups, "+")
 		end
-		ItemButton(fs, base_x + x, base_y + y, item, elem_name, groups)
+		recipe_row[#recipe_row+1] = ItemButton{ item = item, element_name = elem_name, groups = groups }
+		if #recipe_row >= width then
+			recipe_rows[#recipe_rows+1] = gui.HBox(recipe_row)
+			recipe_row = {}
+		end
 	end
+	if #recipe_row > 0 then
+		recipe_rows[#recipe_rows+1] = gui.HBox(recipe_row)
+	end
+	recipe_info[#recipe_info+1] = gui.VBox(recipe_rows)
 
 	if shapeless or recipe.method == "cooking" then
-		table.insert(fs, ("image[3.2,0.5;0.5,0.5;craftguide_%s.png]")
-			:format(shapeless and "shapeless" or "furnace"))
-		local tooltip = shapeless and S("Shapeless") or
-			S("Cooking time: @1", minetest.colorize("yellow", cooktime))
-		table.insert(fs, "tooltip[3.2,0.5;0.5,0.5;"..esc(tooltip).."]")
+		recipe_info[#recipe_info+1] = gui.Image{
+			w = 0.5, h = 0.5,
+			texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
+			name = "cooking_type"
+		}
+		recipe_info[#recipe_info+1] = gui.Tooltip{
+			gui_element_name = "cooking_type",
+			tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
+		}
 	end
-	table.insert(fs, "image[3,1;1,1;sfinv_crafting_arrow.png]")
+	recipe_info[#recipe_info+1] = gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" }
 
-	ItemButton(fs, 4, 1, recipe.output, recipe.output:match("%S*"))
-end
+	recipe_info[#recipe_info+1] = ItemButton{ item = recipe.output, element_name = recipe.output:match"%S*" }
 
-local function CraftguideImageButton(name, tooltip)
-	return gui.VBox{
-		gui.ImageButton{
-			w = 0.8, h = 0.8,
-			texture_name = "craftguide_" .. name .. "_icon.png",
-			name = name,
-			label = "",
-		},
-		gui.Tooltip{ tooltip_text = tooltip, gui_element_name = name }
-	}
+	fs[#fs+1] = gui.HBox(recipe_info)
+	return gui.VBox(fs)
 end
 
 local function get_formspec(player, context)
-	print("fsfcg get_formspec", dump(fsfcg.player_data))
 	local name = player:get_player_name()
-	local data = fsfcg.player_data[name] or { items = {}, pagenum = 1 }
+	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
+	context.fsfcg = data
 	local w = 8
+
+	local function filter_cb(_, c)
+		local new = c.form.filter:lower()
+		if data.filter == new then
+			return
+		end
+		data.filter = new
+		fsfcg.execute_search(data)
+		return true
+	end
 
 	local fs = {
 		expand = true,
@@ -103,9 +119,20 @@ local function get_formspec(player, context)
 			props = { padding = 2 }
 		},
 		gui.HBox{
-			gui.Field{ name = "filter", default = data.filter },
-			CraftguideImageButton("search", S("Search")),
-			CraftguideImageButton("clear", S("Reset")),
+			gui.Field{
+				name = "filter",
+				default = data.filter,
+				on_event = filter_cb
+			},
+			CraftguideImageButton("search", S("Search"), filter_cb),
+			CraftguideImageButton("clear", S("Reset"), function(_, c)
+				data.filter = ""
+				c.form.filter = data.filter
+				data.prev_item = nil
+				data.recipes = nil
+				data.items = fsfcg.init_items
+				return true
+			end),
 		},
 	}
 
@@ -119,6 +146,7 @@ local function get_formspec(player, context)
 		local items_rendered = { w = nil, h = 8, name = "pages" }
 		local ItemButton = fsfcg.ItemButton
 
+		-- TODO turn into a seperate function
 		local row = {}
 		for _, item in ipairs(data.items) do
 			row[#row+1] = ItemButton{ item = item, element_name = item }
@@ -131,9 +159,9 @@ local function get_formspec(player, context)
 			items_rendered[#items_rendered+1] = gui.HBox(row)
 		end
 		fs[#fs+1] = gui.ScrollableVBox(items_rendered)
+		--fs[#fs+1] = gui.PaginatedVBox(items_rendered)
 	end
 
-	--table.insert(fs, "container[0,5.6]")
 	if data.recipes then
 		fs[#fs+1] = Recipe{data = data}
 	elseif data.prev_item then

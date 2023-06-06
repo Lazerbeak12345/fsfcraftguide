@@ -211,7 +211,23 @@ function fsfcg.ItemButton(fields)
 			w = 1.05, h = 1.05,
 			item_name = item,
 			name = element_name,
-			groups and "\n" .. S("G") or ""
+			groups and "\n" .. S("G") or "",
+			on_event = function (_, context)
+				local data = context.fsfcg
+				if item == data.prev_item then
+					data.show_usages = not data.show_usages
+				else
+					data.show_usages = nil
+				end
+				if data.show_usages then
+					data.recipes = fsfcg.usages_cache[item]
+				else
+					data.recipes = fsfcg.recipes_cache[item]
+				end
+				data.prev_item = item
+				data.rnum = 1
+				return true
+			end
 		}
 	}
 
@@ -243,69 +259,13 @@ function fsfcg.on_receive_fields(player, fields)
 	local name = player:get_player_name()
 	local data = fsfcg.player_data[name]
 
-	if fields.clear then
-		data.filter = ""
-		data.pagenum = 1
-		data.prev_item = nil
-		data.recipes = nil
-		data.items = fsfcg.init_items
-		return true
-
-	elseif fields.key_enter_field == "filter" or fields.search then
-		local new = fields.filter:lower()
-		if data.filter == new then
-			return
-		end
-		data.filter = new
-		data.pagenum = 1
-		fsfcg.execute_search(data)
-		return true
-
-	elseif fields.prev or fields.next then
-		if data.pagemax == 1 then
-			return
-		end
-		data.pagenum = data.pagenum + (fields.next and 1 or -1)
-		if data.pagenum > data.pagemax then
-			data.pagenum = 1
-		elseif data.pagenum == 0 then
-			data.pagenum = data.pagemax
-		end
-		return true
-
-	elseif fields.recipe_next or fields.recipe_prev then
+	if fields.recipe_next or fields.recipe_prev then
 		data.rnum = data.rnum + (fields.recipe_next and 1 or -1)
 		if data.rnum > #data.recipes then
 			data.rnum = 1
 		elseif data.rnum == 0 then
 			data.rnum = #data.recipes
 		end
-		return true
-
-	else
-		local item
-		for field in pairs(fields) do
-			if field:find(":") then
-				item = field:match("[%w_:]+")
-				break
-			end
-		end
-		if not item then
-			return
-		end
-
-		if item == data.prev_item then
-			data.show_usages = not data.show_usages
-		else
-			data.show_usages = nil
-		end
-		if data.show_usages then
-			data.recipes = fsfcg.usages_cache[item]
-		else
-			data.recipes = fsfcg.recipes_cache[item]
-		end
-		data.prev_item = item
-		data.rnum = 1
 		return true
 	end
 end
