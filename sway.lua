@@ -3,11 +3,13 @@ local S = fsfcg.get_translator
 local gui = sway.widgets
 
 
-local function CraftguideImageButton(name, tooltip, on_event)
+local function CraftguideImageButton(fields)
+	local name, tooltip, on_event = fields.name, fields.tooltip, fields.on_event
+	local texture_name = fields.texture_name
 	return gui.VBox{
 		gui.ImageButton{
 			w = 0.8, h = 0.8,
-			texture_name = "craftguide_" .. name .. "_icon.png",
+			texture_name = "craftguide_" .. (texture_name or name) .. "_icon.png",
 			name = name,
 			label = "",
 			on_event = on_event
@@ -37,6 +39,15 @@ local function Recipe(fields)
 	end
 	local rows = math.ceil(table.maxn(recipe.items) / width)
 
+	local function recipe_cb()
+		if data.rnum > #data.recipes then
+			data.rnum = 1
+		elseif data.rnum == 0 then
+			data.rnum = #data.recipes
+		end
+		return true
+	end
+
 	local fs = {
 		gui.Label{
 			label = data.show_usages
@@ -44,9 +55,20 @@ local function Recipe(fields)
 				or S("Recipe @1 of @2", data.rnum, #data.recipes)
 		},
 		#data.recipes > 1 and gui.HBox{
-			-- TODO move callbacks to here
-			CraftguideImageButton("prev", S("Previous recipe")),
-			CraftguideImageButton("next", S("Next recipe"))
+			CraftguideImageButton{
+				name = "recipe_prev", texture_name = "prev",
+				tooltip = S("Previous recipe"), on_event = function ()
+					data.rnum = data.rnum + -1
+					return recipe_cb()
+				end
+			},
+			CraftguideImageButton{
+				name = "recipe_next", texture_name = "next",
+				tooltip =  S("Next recipe"), on_event = function ()
+					data.rnum = data.rnum + 1
+					return recipe_cb()
+				end
+			}
 		} or gui.Nil{},
 		(width > 3 or rows > 3) and gui.Label{ label = S("Recipe is too big to be displayed.") } or gui.Nil{}
 	}
@@ -124,15 +146,18 @@ local function get_formspec(player, context)
 				default = data.filter,
 				on_event = filter_cb
 			},
-			CraftguideImageButton("search", S("Search"), filter_cb),
-			CraftguideImageButton("clear", S("Reset"), function(_, c)
-				data.filter = ""
-				c.form.filter = data.filter
-				data.prev_item = nil
-				data.recipes = nil
-				data.items = fsfcg.init_items
-				return true
-			end),
+			CraftguideImageButton{ name = "search", tooltip = S("Search"), on_event = filter_cb },
+			CraftguideImageButton{
+				name = "clear", tooltip = S("Reset"),
+				on_event = function(_, c)
+					data.filter = ""
+					c.form.filter = data.filter
+					data.prev_item = nil
+					data.recipes = nil
+					data.items = fsfcg.init_items
+					return true
+				end
+			},
 		},
 	}
 

@@ -1,6 +1,5 @@
 local fsfcg = fsfcg
 local S = fsfcg.get_translator
-local esc = minetest.formspec_escape
 local gui = sway.widgets
 
 
@@ -252,22 +251,6 @@ function fsfcg.ItemButton(fields)
 		fs[#fs+1] = gui.Tooltip{ tooltip_text = tooltip, gui_element_name = element_name }
 	end
 	return gui.VBox(fs)
-end
-
-
-function fsfcg.on_receive_fields(player, fields)
-	local name = player:get_player_name()
-	local data = fsfcg.player_data[name]
-
-	if fields.recipe_next or fields.recipe_prev then
-		data.rnum = data.rnum + (fields.recipe_next and 1 or -1)
-		if data.rnum > #data.recipes then
-			data.rnum = 1
-		elseif data.rnum == 0 then
-			data.rnum = #data.recipes
-		end
-		return true
-	end
 end
 
 
