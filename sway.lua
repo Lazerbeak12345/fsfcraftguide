@@ -2,6 +2,8 @@ local fsfcg, minetest, sway = fsfcg, minetest, sway
 local S = fsfcg.get_translator
 local gui = sway.widgets
 
+local FLOW_SPACING = 0.25
+local FLOW_SIZE = 1.05
 
 local function CraftguideImageButton(fields)
 	local name, tooltip, on_event = fields.name, fields.tooltip, fields.on_event
@@ -78,26 +80,22 @@ local function Recipe(fields)
 	local extract_groups = fsfcg.extract_groups
 	local groups_to_item = fsfcg.groups_to_item
 
-	local recipe_info = {}
-	local recipe_rows = {}
-	local recipe_row = {}
-	for _, item in pairs(recipe.items) do
-		local elem_name = item
-		local groups = extract_groups(item)
-		if groups then
-			item = groups_to_item(groups)
-			elem_name = item.."."..table.concat(groups, "+")
-		end
-		recipe_row[#recipe_row+1] = ItemButton{ item = item, element_name = elem_name, groups = groups }
-		if #recipe_row >= width then
-			recipe_rows[#recipe_rows+1] = gui.HBox(recipe_row)
-			recipe_row = {}
+	local recipe_parts = { spacing = FLOW_SPACING, w = width * (FLOW_SPACING + FLOW_SIZE) }
+	for index=1,math.max(width * width, #recipe.items) do
+		local item = recipe.items[index]
+		if item then
+			local elem_name = item
+			local groups = extract_groups(item)
+			if groups then
+				item = groups_to_item(groups)
+				elem_name = item.."."..table.concat(groups, "+")
+			end
+			recipe_parts[#recipe_parts+1] = ItemButton{ item = item, element_name = elem_name, groups = groups }
+		else
+			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
 	end
-	if #recipe_row > 0 then
-		recipe_rows[#recipe_rows+1] = gui.HBox(recipe_row)
-	end
-	recipe_info[#recipe_info+1] = gui.VBox(recipe_rows)
+	local recipe_info = { gui.Flow(recipe_parts) }
 
 	if shapeless or recipe.method == "cooking" then
 		recipe_info[#recipe_info+1] = gui.Image{
@@ -168,21 +166,15 @@ local function get_formspec(player, context)
 			gui.Label{ label = S("No items to show.") }
 		}
 	else
-		local items_rendered = { w = nil, h = 8, name = "pages" }
+		local items_rendered = { w = w * (FLOW_SPACING + FLOW_SIZE), spacing = FLOW_SPACING }
 		local ItemButton = fsfcg.ItemButton
 
-		-- TODO turn into a seperate function
-		local row = {}
 		for _, item in ipairs(data.items) do
-			row[#row+1] = ItemButton{ item = item, element_name = item }
-			if #row >= w then
-				items_rendered[#items_rendered+1] = gui.HBox(row)
-				row = {}
-			end
+			items_rendered[#items_rendered+1] = ItemButton{ item = item, element_name = item }
 		end
-		if #row > 0 then
-			items_rendered[#items_rendered+1] = gui.HBox(row)
-		end
+		items_rendered = gui.Flow(items_rendered)
+		items_rendered.name = "craftguide_items"
+		items_rendered.h = 8
 		fs[#fs+1] = gui.ScrollableVBox(items_rendered)
 		--fs[#fs+1] = gui.PaginatedVBox(items_rendered)
 	end
