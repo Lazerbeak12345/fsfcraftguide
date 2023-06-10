@@ -6,17 +6,16 @@ local FLOW_SPACING = 0.25
 local FLOW_SIZE = 1.05
 
 local function CraftguideImageButton(fields)
-	local name, tooltip, on_event = fields.name, fields.tooltip, fields.on_event
-	local texture_name = fields.texture_name
+	local name = fields.name
 	return gui.VBox{
 		gui.ImageButton{
 			w = 0.8, h = 0.8,
-			texture_name = "craftguide_" .. (texture_name or name) .. "_icon.png",
+			texture_name = "craftguide_" .. (fields.texture_name or name) .. "_icon.png",
 			name = name,
 			label = "",
-			on_event = on_event
+			on_event = fields.on_event
 		},
-		gui.Tooltip{ tooltip_text = tooltip, gui_element_name = name }
+		gui.Tooltip{ tooltip_text = fields.tooltip, gui_element_name = name }
 	}
 end
 
