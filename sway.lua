@@ -115,7 +115,8 @@ local function Recipe(fields)
 	return gui.VBox(fs)
 end
 
-local function get_formspec(player, context)
+local function Form(fields)
+	local player, context = fields.player, fields.context
 	local name = player:get_player_name()
 	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
 	context.fsfcg = data
@@ -213,7 +214,7 @@ function gui.sway.Form(fields)
 			bgimg = "sway_bg_full.png",
 			bgimg_middle = 12,
 			padding = 0.4,
-			get_formspec(player, context)
+			Form{ player = player, context = context }
 		} or gui.Nil{}
 	}
 end
@@ -223,7 +224,7 @@ sway.register_page("fsfcraftguide:craftguide", {
 		return gui.sway.Form{
 			player = player,
 			context = context,
-			get_formspec(player, context)
+			Form{ player = player, context = context }
 		}
 	end
 })
