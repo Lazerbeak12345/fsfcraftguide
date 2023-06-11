@@ -94,24 +94,28 @@ local function Recipe(fields)
 			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
 	end
-	local recipe_info = { gui.Flow(recipe_parts) }
-
-	if shapeless or recipe.method == "cooking" then
-		recipe_info[#recipe_info+1] = gui.Image{
-			w = 0.5, h = 0.5,
-			texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
-			name = "cooking_type"
+	local expanded_craft_info = shapeless or recipe.method == "cooking"
+	fs[#fs+1] = gui.HBox{
+		gui.Flow(recipe_parts),
+		gui.VBox{
+			align_v = "center",
+			expanded_craft_info and gui.Spacer{ expand = false, w = 0.5, h = 0.5 } or gui.Nil{},
+			gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
+			expanded_craft_info and gui.Image{
+				w = 0.5, h = 0.5,
+				texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
+				name = "cooking_type"
+			} or gui.Nil{},
+			expanded_craft_info and gui.Tooltip{
+				gui_element_name = "cooking_type",
+				tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
+			} or gui.Nil{}
+		},
+		gui.VBox{
+			align_v = "center",
+			ItemButton{ item = recipe.output, element_name = recipe.output:match"%S*" }
 		}
-		recipe_info[#recipe_info+1] = gui.Tooltip{
-			gui_element_name = "cooking_type",
-			tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
-		}
-	end
-	recipe_info[#recipe_info+1] = gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" }
-
-	recipe_info[#recipe_info+1] = ItemButton{ item = recipe.output, element_name = recipe.output:match"%S*" }
-
-	fs[#fs+1] = gui.HBox(recipe_info)
+	}
 	return gui.VBox(fs)
 end
 
