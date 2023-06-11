@@ -49,31 +49,6 @@ local function Recipe(fields)
 		return true
 	end
 
-	local fs = {
-		gui.Label{
-			label = data.show_usages
-				and S("Usage @1 of @2", data.rnum, #data.recipes)
-				or S("Recipe @1 of @2", data.rnum, #data.recipes)
-		},
-		#data.recipes > 1 and gui.HBox{
-			CraftguideImageButton{
-				name = "recipe_prev", texture_name = "prev",
-				tooltip = S("Previous recipe"), on_event = function ()
-					data.rnum = data.rnum + -1
-					return recipe_cb()
-				end
-			},
-			CraftguideImageButton{
-				name = "recipe_next", texture_name = "next",
-				tooltip =  S("Next recipe"), on_event = function ()
-					data.rnum = data.rnum + 1
-					return recipe_cb()
-				end
-			}
-		} or gui.Nil{},
-		(width > 3 or rows > 3) and gui.Label{ label = S("Recipe is too big to be displayed.") } or gui.Nil{}
-	}
-
 	-- Use local variables for faster execution in loop
 	local ItemButton = fsfcg.ItemButton
 	local extract_groups = fsfcg.extract_groups
@@ -95,28 +70,51 @@ local function Recipe(fields)
 		end
 	end
 	local expanded_craft_info = shapeless or recipe.method == "cooking"
-	fs[#fs+1] = gui.HBox{
-		gui.Flow(recipe_parts),
-		gui.VBox{
-			align_v = "center",
-			expanded_craft_info and gui.Spacer{ expand = false, w = 0.5, h = 0.5 } or gui.Nil{},
-			gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
-			expanded_craft_info and gui.Image{
-				w = 0.5, h = 0.5,
-				texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
-				name = "cooking_type"
-			} or gui.Nil{},
-			expanded_craft_info and gui.Tooltip{
-				gui_element_name = "cooking_type",
-				tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
-			} or gui.Nil{}
+	return gui.VBox{
+		gui.Label{
+			label = data.show_usages
+				and S("Usage @1 of @2", data.rnum, #data.recipes)
+				or S("Recipe @1 of @2", data.rnum, #data.recipes)
 		},
-		gui.VBox{
-			align_v = "center",
-			ItemButton{ item = recipe.output, element_name = recipe.output:match"%S*" }
+		#data.recipes > 1 and gui.HBox{
+			CraftguideImageButton{
+				name = "recipe_prev", texture_name = "prev",
+				tooltip = S("Previous recipe"), on_event = function ()
+					data.rnum = data.rnum + -1
+					return recipe_cb()
+				end
+			},
+			CraftguideImageButton{
+				name = "recipe_next", texture_name = "next",
+				tooltip =  S("Next recipe"), on_event = function ()
+					data.rnum = data.rnum + 1
+					return recipe_cb()
+				end
+			}
+		} or gui.Nil{},
+		(width > 3 or rows > 3) and gui.Label{ label = S("Recipe is too big to be displayed.") } or gui.Nil{},
+		gui.HBox{
+			gui.Flow(recipe_parts),
+			gui.VBox{
+				align_v = "center",
+				expanded_craft_info and gui.Spacer{ expand = false, w = 0.5, h = 0.5 } or gui.Nil{},
+				gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
+				expanded_craft_info and gui.Image{
+					w = 0.5, h = 0.5,
+					texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
+					name = "cooking_type"
+				} or gui.Nil{},
+				expanded_craft_info and gui.Tooltip{
+					gui_element_name = "cooking_type",
+					tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
+				} or gui.Nil{}
+			},
+			gui.VBox{
+				align_v = "center",
+				ItemButton{ item = recipe.output, element_name = recipe.output:match"%S*" }
+			}
 		}
 	}
-	return gui.VBox(fs)
 end
 
 local function Form(fields)
