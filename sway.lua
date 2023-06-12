@@ -125,6 +125,7 @@ local function Form(fields)
 	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
 	context.fsfcg = data
 	local w = 8
+	local items = data.items
 
 	local function filter_cb(_, c)
 		local new = c.form.filter:lower()
@@ -136,7 +137,21 @@ local function Form(fields)
 		return true
 	end
 
-	local fs = {
+	local items_rendered
+	if #items ~= 0 then
+		items_rendered = { w = w * (FLOW_SPACING + FLOW_SIZE), spacing = FLOW_SPACING }
+		local ItemButton = fsfcg.ItemButton
+
+		for _, item in ipairs(data.items) do
+			items_rendered[#items_rendered+1] = ItemButton{ item = item, element_name = item }
+		end
+		items_rendered = gui.Flow(items_rendered)
+		items_rendered.name = "craftguide_items"
+		items_rendered.h = 8
+		items_rendered = gui.ScrollableVBox(items_rendered)
+	end
+
+	return gui.VBox{
 		expand = true,
 		gui.StyleType{
 			selectors = { "item_image_button" },
@@ -161,39 +176,17 @@ local function Form(fields)
 				end
 			},
 		},
-	}
-
-	if #data.items == 0 then
-		fs[#fs+1] = gui.VBox{
+		items_rendered or gui.VBox{
 			align_v = "center", align_h = "center",
 			expand = true,
 			gui.Label{ label = S("No items to show.") }
-		}
-	else
-		local items_rendered = { w = w * (FLOW_SPACING + FLOW_SIZE), spacing = FLOW_SPACING }
-		local ItemButton = fsfcg.ItemButton
-
-		for _, item in ipairs(data.items) do
-			items_rendered[#items_rendered+1] = ItemButton{ item = item, element_name = item }
-		end
-		items_rendered = gui.Flow(items_rendered)
-		items_rendered.name = "craftguide_items"
-		items_rendered.h = 8
-		fs[#fs+1] = gui.ScrollableVBox(items_rendered)
-		--fs[#fs+1] = gui.PaginatedVBox(items_rendered)
-	end
-
-	if data.recipes then
-		fs[#fs+1] = Recipe{data = data}
-	elseif data.prev_item then
-		fs[#fs+1] = gui.Label{
+		},
+		data.recipes and Recipe{data = data} or gui.Label{
 			label = data.show_usages
 				and S("No usages.").."\n"..S("Click again to show recipes.")
 				or S("No recipes.").."\n"..S("Click again to show usages.")
 		}
-	end
-
-	return gui.VBox(fs)
+	}
 end
 
 local orig_update_for_player = fsfcg.update_for_player
