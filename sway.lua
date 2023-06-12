@@ -69,7 +69,6 @@ local function Recipe(fields)
 			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
 	end
-	local expanded_craft_info = shapeless or recipe.method == "cooking"
 	return gui.VBox{
 		gui.Label{
 			label = data.show_usages
@@ -95,19 +94,22 @@ local function Recipe(fields)
 		(width > 3 or rows > 3) and gui.Label{ label = S("Recipe is too big to be displayed.") } or gui.Nil{},
 		gui.HBox{
 			gui.Flow(recipe_parts),
-			gui.VBox{
+			(shapeless or recipe.method == "cooking") and gui.VBox{
 				align_v = "center",
-				expanded_craft_info and gui.Spacer{ expand = false, w = 0.5, h = 0.5 } or gui.Nil{},
+				gui.Spacer{ expand = false, w = 0.5, h = 0.5 },
 				gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
-				expanded_craft_info and gui.Image{
+				gui.Image{
 					w = 0.5, h = 0.5,
 					texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
 					name = "cooking_type"
-				} or gui.Nil{},
-				expanded_craft_info and gui.Tooltip{
+				},
+				gui.Tooltip{
 					gui_element_name = "cooking_type",
 					tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
-				} or gui.Nil{}
+				}
+			} or gui.VBox{
+				align_v = "center",
+				gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
 			},
 			gui.VBox{
 				align_v = "center",
