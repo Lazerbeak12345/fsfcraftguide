@@ -20,7 +20,7 @@ local function CraftguideImageButton(fields)
 end
 
 
-local function Recipe(fields)
+local function Recipes(fields)
 	local data = fields.data
 	local recipe = data.recipes[data.rnum]
 	local width = recipe.width
@@ -181,7 +181,7 @@ local function Form(fields)
 			expand = true,
 			gui.Label{ label = S("No items to show.") }
 		},
-		data.recipes and Recipe{data = data} or gui.Label{
+		data.recipes and Recipes{data = data} or gui.Label{
 			label = data.show_usages
 				and S("No usages.").."\n"..S("Click again to show recipes.")
 				or S("No recipes.").."\n"..S("Click again to show usages.")
