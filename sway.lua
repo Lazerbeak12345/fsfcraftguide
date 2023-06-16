@@ -40,7 +40,8 @@ local function Recipes(fields)
 	end
 	local rows = math.ceil(table.maxn(recipe.items) / width)
 
-	local function recipe_cb()
+	local function recipe_cb(_, c)
+		local data = assert(c.fsfcg, "fsfcg data must be present in context")
 		if data.rnum > #data.recipes then
 			data.rnum = 1
 		elseif data.rnum == 0 then
@@ -78,16 +79,16 @@ local function Recipes(fields)
 		#data.recipes > 1 and gui.HBox{
 			CraftguideImageButton{
 				name = "recipe_prev", texture_name = "prev",
-				tooltip = S("Previous recipe"), on_event = function ()
+				tooltip = S("Previous recipe"), on_event = function (...)
 					data.rnum = data.rnum + -1
-					return recipe_cb()
+					return recipe_cb(...)
 				end
 			},
 			CraftguideImageButton{
 				name = "recipe_next", texture_name = "next",
-				tooltip =  S("Next recipe"), on_event = function ()
+				tooltip =  S("Next recipe"), on_event = function (...)
 					data.rnum = data.rnum + 1
-					return recipe_cb()
+					return recipe_cb(...)
 				end
 			}
 		} or gui.Nil{},
