@@ -19,35 +19,26 @@ local function CraftguideImageButton(fields)
 	}
 end
 
-
-local function Recipes(fields)
-	local data = fields.data
-	local recipe = data.recipes[data.rnum]
-	local width = recipe.width
+local function Recipe(fields)
+	local width = fields.width
 	local cooktime, shapeless
 
-	if recipe.method == "cooking" then
+	if fields.method == "cooking" then
 		cooktime, width = width, 1
 	elseif width == 0 then
 		shapeless = true
-		if #recipe.items == 1 then
+		if #fields.items == 1 then
 			width = 1
-		elseif #recipe.items <= 4 then
+		elseif #fields.items <= 4 then
 			width = 2
 		else
 			width = 3
 		end
 	end
-	local rows = math.ceil(table.maxn(recipe.items) / width)
+	local rows = math.ceil(table.maxn(fields.items) / width)
 
-	local function recipe_cb(_, c)
-		local data = assert(c.fsfcg, "fsfcg data must be present in context")
-		if data.rnum > #data.recipes then
-			data.rnum = 1
-		elseif data.rnum == 0 then
-			data.rnum = #data.recipes
-		end
-		return true
+	if width > 3 or rows > 3 then
+		return gui.Label{ label = S("Recipe is too big to be displayed.") }
 	end
 
 	-- Use local variables for faster execution in loop
@@ -56,8 +47,8 @@ local function Recipes(fields)
 	local groups_to_item = fsfcg.groups_to_item
 
 	local recipe_parts = { spacing = FLOW_SPACING, w = width * (FLOW_SPACING + FLOW_SIZE) }
-	for index=1,math.max(width * width, #recipe.items) do
-		local item = recipe.items[index]
+	for index=1,math.max(width * width, #fields.items) do
+		local item = fields.items[index]
 		if item then
 			local elem_name = item
 			local groups = extract_groups(item)
@@ -69,6 +60,45 @@ local function Recipes(fields)
 		else
 			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
+	end
+
+	return gui.HBox{
+		gui.Flow(recipe_parts),
+		(shapeless or fields.method == "cooking") and gui.VBox{
+			align_v = "center",
+			gui.Spacer{ expand = false, w = 0.5, h = 0.5 },
+			gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
+			gui.Image{
+				w = 0.5, h = 0.5,
+				texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
+				name = "cooking_type"
+			},
+			gui.Tooltip{
+				gui_element_name = "cooking_type",
+				tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
+			}
+		} or gui.VBox{
+			align_v = "center",
+			gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
+		},
+		gui.VBox{
+			align_v = "center",
+			ItemButton{ item = fields.output, element_name = fields.output:match"%S*" }
+		}
+	}
+end
+
+local function Recipes(fields)
+	local data = fields.data
+	local recipe = data.recipes[data.rnum]
+	local function recipe_cb(_, c)
+		local data = assert(c.fsfcg, "fsfcg data must be present in context")
+		if data.rnum > #data.recipes then
+			data.rnum = 1
+		elseif data.rnum == 0 then
+			data.rnum = #data.recipes
+		end
+		return true
 	end
 	return gui.VBox{
 		gui.Label{
@@ -92,30 +122,11 @@ local function Recipes(fields)
 				end
 			}
 		} or gui.Nil{},
-		(width > 3 or rows > 3) and gui.Label{ label = S("Recipe is too big to be displayed.") } or gui.Nil{},
-		gui.HBox{
-			gui.Flow(recipe_parts),
-			(shapeless or recipe.method == "cooking") and gui.VBox{
-				align_v = "center",
-				gui.Spacer{ expand = false, w = 0.5, h = 0.5 },
-				gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
-				gui.Image{
-					w = 0.5, h = 0.5,
-					texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
-					name = "cooking_type"
-				},
-				gui.Tooltip{
-					gui_element_name = "cooking_type",
-					tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
-				}
-			} or gui.VBox{
-				align_v = "center",
-				gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
-			},
-			gui.VBox{
-				align_v = "center",
-				ItemButton{ item = recipe.output, element_name = recipe.output:match"%S*" }
-			}
+		Recipe{
+			width = recipe.width,
+			method = recipe.method,
+			items = recipe.items,
+			output = recipe.output
 		}
 	}
 end
