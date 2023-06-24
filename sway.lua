@@ -1,6 +1,6 @@
-local fsfcg, minetest, sway = fsfcg, minetest, sway
+local fsfcg, minetest, sway, flow = fsfcg, minetest, sway, flow
 local S = fsfcg.get_translator
-local gui = sway.widgets
+local gui = flow.widgets
 
 local FLOW_SPACING = 0.25
 local FLOW_SIZE = 1.05
@@ -212,8 +212,8 @@ end
 
 -- BUG this code has a race condition. If two mods replace a widget, there needs to be a way to ensure they both play
 -- nice.
-local OldForm = gui.sway.Form
-function gui.sway.Form(fields)
+local OldForm = sway.Form
+function sway.Form(fields)
 	local player = fields.player
 	local context = fields.context
 	return gui.HBox{
@@ -229,8 +229,8 @@ function gui.sway.Form(fields)
 end
 sway.register_page("fsfcraftguide:craftguide", {
 	title = S("Recipes"),
-	get = function(self, player, context)
-		return gui.sway.Form{
+	get = function(_, player, context)
+		return sway.Form{
 			player = player,
 			context = context,
 			Form{ player = player, context = context }

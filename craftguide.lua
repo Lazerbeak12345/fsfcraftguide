@@ -1,6 +1,6 @@
-local fsfcg = fsfcg
+local fsfcg, flow, minetest = fsfcg, flow, minetest
 local S = fsfcg.get_translator
-local gui = sway.widgets
+local gui = flow.widgets
 
 
 local group_stereotypes = {
