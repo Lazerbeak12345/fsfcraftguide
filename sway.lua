@@ -132,7 +132,8 @@ local function Recipes(fields)
 end
 
 local function Form(fields)
-	local player, context = fields.player, fields.context
+	local context = sway.get_or_create_context()
+	local player = context.player
 	local name = player:get_player_name()
 	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
 	context.fsfcg = data
@@ -214,26 +215,21 @@ end
 -- nice.
 local OldForm = sway.Form
 function sway.Form(fields)
-	local player = fields.player
-	local context = fields.context
+	fields.expand = true
 	return gui.HBox{
 		spacing = 0.25,
 		OldForm(fields),
-		(player and context) and gui.VBox{
+		gui.VBox{
 			bgimg = "sway_bg_full.png",
 			bgimg_middle = 12,
 			padding = 0.4,
-			Form{ player = player, context = context }
-		} or gui.Nil{}
+			Form{}
+		}
 	}
 end
 sway.register_page("fsfcraftguide:craftguide", {
 	title = S("Recipes"),
-	get = function(_, player, context)
-		return sway.Form{
-			player = player,
-			context = context,
-			Form{ player = player, context = context }
-		}
+	get = function()
+		return sway.Form{ Form{} }
 	end
 })
