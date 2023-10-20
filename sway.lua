@@ -132,8 +132,7 @@ local function Recipes(fields)
 end
 
 local function Form(fields)
-	local context = sway.get_or_create_context()
-	local player = context.player
+	local player, context = sway.get_player_and_context()
 	local name = player:get_player_name()
 	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
 	context.fsfcg = data
