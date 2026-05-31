@@ -29,17 +29,13 @@ Recipes reveal will be synchronized with the doc items discovered ([doc/help](ht
 
 ## Authors of media
 
-paramat (CC BY-SA 3.0):
+This project is brought to you thanks in part to these artists:
 
-* craftguide_clear_icon.png
-* craftguide_next_icon.png
-* craftguide_prev_icon.png
-* craftguide_search_icon.png
+- Texture Art:
+    - paramat
+    - Neuromancer
+    - Wuzzy
+- Thumnail Art:
+    - dacmot
 
-Neuromancer (CC BY-SA 3.0):
-
-* craftguide_furnace.png
-
-Wuzzy (CC BY-SA 3.0):
-
-* craftguide_shapeless.png
+_The media in this project conforms to the REUSE specification. For more detailed information about the media licencing, consult the machine & human readable SPDX annotations used in the project_.
