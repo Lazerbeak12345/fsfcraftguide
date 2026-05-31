@@ -210,7 +210,7 @@ function fsfcg.ItemButton(fields)
 			w = 1.05, h = 1.05,
 			item_name = item,
 			name = element_name,
-			groups and "\n" .. S("G") or "",
+			label = groups and "\n" .. S"G" or "",
 			on_event = function (_, context)
 				local data = context.fsfcg
 				if item == data.prev_item then

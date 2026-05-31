@@ -21,8 +21,8 @@ function sway.Form(fields)
 	}
 end
 sway.register_page("fsfcraftguide:craftguide", {
-	title = S("Recipes"),
-	get = function()
+	title = S"Recipes",
+	get = function(_--[[self]], _--[[player]], _--[[context]])
 		return sway.Form{ Form{} }
 	end
 })

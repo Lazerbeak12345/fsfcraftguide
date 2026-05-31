@@ -1,4 +1,4 @@
-local fsfcg, minetest, sway, flow = fsfcg, minetest, sway, flow
+local fsfcg, minetest, flow, flow_extras = fsfcg, minetest, flow, flow_extras
 local S = fsfcg.get_translator
 local gui = flow.widgets
 
@@ -67,7 +67,15 @@ local function Recipe(fields)
 		(shapeless or fields.method == "cooking") and gui.VBox{
 			align_v = "center",
 			gui.Spacer{ expand = false, w = 0.5, h = 0.5 },
-			gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
+			gui.Image{
+				w = 1,
+				h = 1,
+				texture_name =
+				minetest.global_exists"sway"
+					and "sway_crafting_arrow.png"
+					-- TODO: we need the actual image
+					or "air.png"
+			},
 			gui.Image{
 				w = 0.5, h = 0.5,
 				texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
@@ -79,7 +87,15 @@ local function Recipe(fields)
 			}
 		} or gui.VBox{
 			align_v = "center",
-			gui.Image{ w = 1, h = 1, texture_name = "sway_crafting_arrow.png" },
+			gui.Image{
+				w = 1,
+				h = 1,
+				texture_name =
+					minetest.global_exists"sway"
+					and "sway_crafting_arrow.png"
+					-- TODO: we need the actual image
+					or "air.png"
+			},
 		},
 		gui.VBox{
 			align_v = "center",
@@ -131,9 +147,9 @@ local function Recipes(fields)
 	}
 end
 
-function fsfcg.Form(fields)
-	local player, context = sway.get_player_and_context()
-	local name = player:get_player_name()
+function fsfcg.Form(_--[[fields]])
+	local context = flow_extras.get_context()
+	local name = context.player_name
 	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
 	context.fsfcg = data
 	local w = 8
@@ -204,7 +220,8 @@ end
 local orig_update_for_player = fsfcg.update_for_player
 function fsfcg.update_for_player(playername)
 	local player = orig_update_for_player(playername)
-	if player and sway.enabled then
+	-- TODO: this is incorrect
+	if player and minetest.global_exists"sway" and sway.enabled then
 		sway.set_player_inventory_formspec(player)
 	end
 	return player
