@@ -1,3 +1,9 @@
+-- SPDX-License-Identifier: MIT
+-- SPDX-FileCopyrightText: 2022-2023
+-- SPDX-FileContributor: dacmot
+-- SPDX-FileCopyrightText: 2023-2026
+-- SPDX-FileContributor: Lazerbeak12345
+
 unused_args = false
 allow_defined_top = true
 

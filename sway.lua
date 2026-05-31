@@ -1,3 +1,7 @@
+-- SPDX-License-Identifier: MIT
+-- SPDX-FileCopyrightText: 2023-2026
+-- SPDX-FileContributor: Lazerbeak12345
+
 local fsfcg, minetest, sway, flow = fsfcg, minetest, sway, flow
 local S = fsfcg.get_translator
 local gui = flow.widgets
