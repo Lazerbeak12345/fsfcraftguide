@@ -2,6 +2,14 @@
 
 # fsfcraftguide
 
+> [!INFO]
+> This mod is canonically maintained on [Radicle], a tool to add features from
+> GitHub to Git while remaining p2p.
+>
+> Clone the repo with its issues via `rad clone rad:z21MxmXaKJhGMGnNKsZ6fzzi4ZsZi`
+
+[Radicle]: https://radicle.dev/
+
 An augmented [mtg_craftguide]. Supports a progressive reveal system that follows the documentation mod item help. Uses [flow] to render the formspecs.
 
 Based on [sfcraftguide] which itself is based on [mtg_craftguide], which is in turn based on [craftguide].
