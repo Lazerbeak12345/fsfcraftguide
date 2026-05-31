@@ -2,9 +2,11 @@
 
 # fsfcraftguide
 
-> [!INFO]
+> [!IMPORTANT]
 > This mod is canonically maintained on [Radicle], a tool to add features from
 > GitHub to Git while remaining p2p.
+>
+> The old GitHub repo is now a **mirror**.
 >
 > Clone the repo with its issues via `rad clone rad:z21MxmXaKJhGMGnNKsZ6fzzi4ZsZi`
 
