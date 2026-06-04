@@ -179,7 +179,7 @@ function fsfcg.Form(_--[[fields]])
 		end
 		items_rendered = gui.Flow(items_rendered)
 		items_rendered.name = "craftguide_items"
-		items_rendered.h = 8
+		items_rendered.h = 4
 		items_rendered = gui.ScrollableVBox(items_rendered)
 	end
 
