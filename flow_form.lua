@@ -23,6 +23,17 @@ local function CraftguideImageButton(fields)
 	}
 end
 
+local function get_right_arrow_texture_name()
+	if minetest.global_exists"sway" then
+		return "sway_crafting_arrow.png"
+	elseif minetest.global_exists"sfinv" then
+		return "sfinv_crafting_arrow.png"
+	else
+		-- This image name is a placeholder, and does not exist.
+		return "fsfcraftguide_crafting_arrow.png"
+	end
+end
+
 local function Recipe(fields)
 	local width = fields.width
 	local cooktime, shapeless
@@ -74,11 +85,7 @@ local function Recipe(fields)
 			gui.Image{
 				w = 1,
 				h = 1,
-				texture_name =
-				minetest.global_exists"sway"
-					and "sway_crafting_arrow.png"
-					-- TODO: we need the actual image
-					or "air.png"
+				texture_name = get_right_arrow_texture_name()
 			},
 			gui.Image{
 				w = 0.5, h = 0.5,
@@ -94,11 +101,7 @@ local function Recipe(fields)
 			gui.Image{
 				w = 1,
 				h = 1,
-				texture_name =
-					minetest.global_exists"sway"
-					and "sway_crafting_arrow.png"
-					-- TODO: we need the actual image
-					or "air.png"
+				texture_name = get_right_arrow_texture_name()
 			},
 		},
 		gui.VBox{
