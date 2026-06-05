@@ -23,15 +23,21 @@ local function CraftguideImageButton(fields)
 	}
 end
 
-local function get_right_arrow_texture_name()
+local function RightArrow(_--[[fields]])
+	local texture_name
 	if minetest.global_exists"sway" then
-		return "sway_crafting_arrow.png"
+		texture_name = "sway_crafting_arrow.png"
 	elseif minetest.global_exists"sfinv" then
-		return "sfinv_crafting_arrow.png"
+		texture_name = "sfinv_crafting_arrow.png"
 	else
 		-- This image name is a placeholder, and does not exist.
-		return "fsfcraftguide_crafting_arrow.png"
+		texture_name = "fsfcraftguide_crafting_arrow.png"
 	end
+	return gui.Image{
+		w = 1,
+		h = 1,
+		texture_name = texture_name
+	}
 end
 
 local function Recipe(fields)
@@ -56,22 +62,17 @@ local function Recipe(fields)
 		return gui.Label{ label = S("Recipe is too big to be displayed.") }
 	end
 
-	-- Use local variables for faster execution in loop
-	local ItemButton = fsfcg.ItemButton
-	local extract_groups = fsfcg.extract_groups
-	local groups_to_item = fsfcg.groups_to_item
-
 	local recipe_parts = { spacing = FLOW_SPACING, w = width * (FLOW_SPACING + FLOW_SIZE) }
 	for index=1,math.max(width * width, #fields.items) do
 		local item = fields.items[index]
 		if item then
 			local elem_name = item
-			local groups = extract_groups(item)
+			local groups = fsfcg.extract_groups(item)
 			if groups then
-				item = groups_to_item(groups)
+				item = fsfcg.groups_to_item(groups)
 				elem_name = item.."."..table.concat(groups, "+")
 			end
-			recipe_parts[#recipe_parts+1] = ItemButton{ item = item, element_name = elem_name, groups = groups }
+			recipe_parts[#recipe_parts+1] = fsfcg.ItemButton{ item = item, element_name = elem_name, groups = groups }
 		else
 			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
@@ -81,13 +82,7 @@ local function Recipe(fields)
 		gui.Flow(recipe_parts),
 		(shapeless or fields.method == "cooking") and gui.VBox{
 			align_v = "center",
-			gui.Spacer{ expand = false, w = 0.5, h = 0.5 },
-			gui.Image{
-				w = 1,
-				h = 1,
-				texture_name = get_right_arrow_texture_name()
-			},
-			gui.Image{
+			gui.ImageButton{
 				w = 0.5, h = 0.5,
 				texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
 				name = "cooking_type"
@@ -95,18 +90,16 @@ local function Recipe(fields)
 			gui.Tooltip{
 				gui_element_name = "cooking_type",
 				tooltip_text = shapeless and S("Shapeless") or S("Cooking time: @1", minetest.colorize("yellow", cooktime))
-			}
+			},
+			RightArrow{},
+			gui.Spacer{ expand = false, w = 0.5, h = 0.5 },
 		} or gui.VBox{
 			align_v = "center",
-			gui.Image{
-				w = 1,
-				h = 1,
-				texture_name = get_right_arrow_texture_name()
-			},
+			RightArrow{}
 		},
 		gui.VBox{
 			align_v = "center",
-			ItemButton{ item = fields.output, element_name = fields.output:match"%S*" }
+			fsfcg.ItemButton{ item = fields.output, element_name = fields.output:match"%S*" }
 		}
 	}
 end
@@ -123,33 +116,36 @@ local function Recipes(fields)
 		end
 		return true
 	end
-	return gui.VBox{
-		gui.Label{
-			label = data.show_usages
-				and S("Usage @1 of @2", data.rnum, #data.recipes)
-				or S("Recipe @1 of @2", data.rnum, #data.recipes)
-		},
-		#data.recipes > 1 and gui.HBox{
-			CraftguideImageButton{
-				name = "recipe_prev", texture_name = "prev",
-				tooltip = S("Previous recipe"), on_event = function (...)
-					data.rnum = data.rnum + -1
-					return recipe_cb(...)
-				end
-			},
-			CraftguideImageButton{
-				name = "recipe_next", texture_name = "next",
-				tooltip =  S("Next recipe"), on_event = function (...)
-					data.rnum = data.rnum + 1
-					return recipe_cb(...)
-				end
-			}
-		} or gui.Nil{},
+	return gui.HBox{
 		Recipe{
 			width = recipe.width,
 			method = recipe.method,
 			items = recipe.items,
 			output = recipe.output
+		},
+		gui.Spacer{},
+		gui.VBox{
+			gui.Label{
+				label = data.show_usages
+					and S("Usage @1 of @2", data.rnum, #data.recipes)
+					or S("Recipe @1 of @2", data.rnum, #data.recipes)
+			},
+			#data.recipes > 1 and gui.HBox{
+				CraftguideImageButton{
+					name = "recipe_prev", texture_name = "prev",
+					tooltip = S("Previous recipe"), on_event = function (...)
+						data.rnum = data.rnum + -1
+						return recipe_cb(...)
+					end
+				},
+				CraftguideImageButton{
+					name = "recipe_next", texture_name = "next",
+					tooltip =  S("Next recipe"), on_event = function (...)
+						data.rnum = data.rnum + 1
+						return recipe_cb(...)
+					end
+				}
+			} or gui.Nil{},
 		}
 	}
 end
