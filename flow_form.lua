@@ -82,7 +82,7 @@ local function Recipe(fields)
 		gui.Flow(recipe_parts),
 		(shapeless or fields.method == "cooking") and gui.VBox{
 			align_v = "center",
-			gui.ImageButton{
+			gui.Image{
 				w = 0.5, h = 0.5,
 				texture_name = shapeless and "craftguide_shapeless.png" or "craftguide_furnace.png",
 				name = "cooking_type"
