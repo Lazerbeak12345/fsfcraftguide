@@ -8,7 +8,7 @@
 -- SPDX-FileCopyrightText: 2023-2026
 -- SPDX-FileContributor: Lazerbeak12345
 
-local fsfcg, flinv, flow = fsfcg, flinv, flow
+local fsfcg, flinv, flow, core, sway, sfinv = fsfcg, flinv, flow, core, sway, sfinv
 
 local S = fsfcg.get_translator
 local Form = fsfcg.Form
@@ -23,10 +23,16 @@ flinv.register_tab("fsfcraftguide:craftguide", {
 		context.player_name = player:get_player_name()
 		return Form{}
 	end),
-	show_inventory = false
-	-- TODO: disable on
-	--       - i3 (has builtin craftguide)
-	--       - unified_inventory (has builtin craftguide)
+	show_inventory = false,
 	-- TODO: flinv may have a bug, smart_inventory didn't work (at all)
 	-- 		 This was while unified_inventory was also present.
+	show = function (player)
+		-- Opt-in to inventory systems that don't already come with a craftguide
+		-- This still isn't ideal, thanks to the above bug.
+		return (core.get_modpath"sway" and sway.enabled)
+			or (core.get_modpath"sfinv" and sfinv.enabled)
+			-- TODO: send them code for an enablement flag?
+			-- TODO: this inventory needs a back button
+			or (core.get_modpath"inventory_plus" --[[has no enablement flag]])
+	end
 })
