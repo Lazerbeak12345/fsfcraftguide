@@ -8,10 +8,11 @@
 -- SPDX-FileCopyrightText: 2023-2026
 -- SPDX-FileContributor: Lazerbeak12345
 
+local minetest = _G.minetest
 local S = minetest.get_translator(minetest.get_current_modname())
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 
-fsfcg = {
+_G.fsfcg = {
 	modpath = modpath,
 	get_translator = S,
 	player_data = {},
@@ -37,15 +38,31 @@ if minetest.get_modpath"doc" and minetest.get_modpath"doc_items" then
 	dofile(modpath.."/reveal.lua")
 end
 
-if minetest.get_modpath"sway" and minetest.global_exists"sway" and sway.enabled then
-	dofile(modpath.."/sway.lua")
+if minetest.get_modpath"sway" and minetest.global_exists"sway" then
+	local sway = _G.sway
+	if sway.enabled then
+		dofile(modpath.."/sway.lua")
+	end
 elseif minetest.get_modpath"flinv" and minetest.global_exists"flinv" then
 	dofile(modpath.."/flinv.lua")
 end
 
-if minetest.get_modpath"mtg_craftguide" and minetest.get_modpath"sfinv" and minetest.global_exists"sfinv" then
-	-- Disable mtg_craftguide
-	sfinv.override_page("mtg_craftguide:craftguide", {
-		is_in_nav = function () return false end
-	})
-end
+minetest.register_on_mods_loaded(function()
+	if minetest.get_modpath"sfinv" and minetest.global_exists"sfinv" then
+		local sfinv = _G.sfinv
+		if sfinv.enabled then
+			for mod, page in pairs{
+				sfcraftguide = "sfcraftguide:craftguide",
+				mtg_craftguide = "sfcraftguide:craftguide"
+			} do
+				if minetest.get_modpath(mod) then
+					sfinv.override_page(page, {
+						is_in_nav = function()
+							return false
+						end
+					})
+				end
+			end
+		end
+	end
+end)
