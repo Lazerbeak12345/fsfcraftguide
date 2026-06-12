@@ -1,0 +1,18 @@
+{
+  "type": "MOD",
+  "title": "fsfcraftguide",
+  "name": "fsfcraftguide",
+  "short_description": "An augmented mtg_craftguide. Supports a progressive reveal system that follows doc items help. Uses flow to render formspecs",
+  "tags": [
+    "crafting",
+    "survival",
+    "gui",
+    "mtg"
+  ],
+  "dev_state": "WIP",
+  "license": "MIT",
+  "media_license": "CC-BY-SA-3.0",
+  "repo": "https://radicle.network/nodes/iris.radicle.network/rad:z21MxmXaKJhGMGnNKsZ6fzzi4ZsZi",
+  "website": null,
+  "issue_tracker": "https://radicle.network/nodes/iris.radicle.network/rad:z21MxmXaKJhGMGnNKsZ6fzzi4ZsZi/issues"
+}

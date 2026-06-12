@@ -149,8 +149,8 @@ local function get_craftable_recipes(output)
 		return nil
 	end
 
-  local groups_to_item = fsfcg.groups_to_item
-  local reg_items = minetest.registered_items
+	local groups_to_item = fsfcg.groups_to_item
+	local reg_items = minetest.registered_items
 	for i = #recipes, 1, -1 do
 		for _, item in pairs(recipes[i].items) do
 			local groups = extract_groups(item)
@@ -178,8 +178,8 @@ end
 local function cache_usages(recipe)
 
 	local added = {}
-  local usages_cache = fsfcg.usages_cache
-  local reg_items = minetest.registered_items
+	local usages_cache = fsfcg.usages_cache
+	local reg_items = minetest.registered_items
 
 	for _, item in pairs(recipe.items) do
 		if not added[item] then
@@ -269,15 +269,15 @@ function fsfcg.update_for_player(playername)
 	if player then
 		fsfcg.execute_search(fsfcg.player_data[playername])
 	end
-  return player
+	return player
 end
 
 
 minetest.register_on_mods_loaded(function()
 
-  local recipes_cache = fsfcg.recipes_cache
-  local usages_cache = fsfcg.usages_cache
-  local init_items = fsfcg.init_items
+	local recipes_cache = fsfcg.recipes_cache
+	local usages_cache = fsfcg.usages_cache
+	local init_items = fsfcg.init_items
 	for name, def in pairs(minetest.registered_items) do
 		if show_item(def) then
 			local recipes = get_craftable_recipes(name)
