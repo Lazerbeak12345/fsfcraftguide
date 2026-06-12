@@ -53,7 +53,7 @@ minetest.register_on_mods_loaded(function()
 		if sfinv.enabled then
 			for mod, page in pairs{
 				sfcraftguide = "sfcraftguide:craftguide",
-				mtg_craftguide = "sfcraftguide:craftguide"
+				mtg_craftguide = "mtg_craftguide:craftguide"
 			} do
 				if minetest.get_modpath(mod) then
 					sfinv.override_page(page, {
