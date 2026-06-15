@@ -19,6 +19,7 @@ _G.fsfcg = {
 	init_items = {},
 	recipes_cache = {},
 	usages_cache = {},
+	enabled = true
 }
 
 function fsfcg.get_usages(data, item)
@@ -43,9 +44,8 @@ if minetest.get_modpath"sway" and minetest.global_exists"sway" then
 	if sway.enabled then
 		dofile(modpath.."/sway.lua")
 	end
-elseif minetest.get_modpath"flinv" and minetest.global_exists"flinv" then
-	dofile(modpath.."/flinv.lua")
 end
+dofile(modpath.."/flinv.lua")
 
 minetest.register_on_mods_loaded(function()
 	if minetest.get_modpath"sfinv" and minetest.global_exists"sfinv" then

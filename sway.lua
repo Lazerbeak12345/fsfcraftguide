@@ -12,6 +12,10 @@ local Form = fsfcg.Form
 -- nice.
 local OldSwayForm = sway.Form
 function sway.Form(fields)
+	if not fsfcg.enabled then
+		sway.Form = OldSwayForm
+		return OldSwayForm(fields)
+	end
 	fields.expand = true
 	return gui.HBox{
 		spacing = 0.25,
@@ -24,9 +28,3 @@ function sway.Form(fields)
 		}
 	}
 end
-sway.register_page("fsfcraftguide:craftguide", {
-	title = S"Recipes",
-	get = function(_--[[self]], _--[[player]], _--[[context]])
-		return sway.Form{ Form{} }
-	end
-})

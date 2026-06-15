@@ -274,6 +274,7 @@ end
 
 
 minetest.register_on_mods_loaded(function()
+	if not fsfcg.enabled then return end
 
 	local recipes_cache = fsfcg.recipes_cache
 	local usages_cache = fsfcg.usages_cache
@@ -301,6 +302,8 @@ end)
 
 
 minetest.register_on_joinplayer(function(player)
+	if not fsfcg.enabled then return end
+
 	local name = player:get_player_name()
 	local info = minetest.get_player_information(name)
 
