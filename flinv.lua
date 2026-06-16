@@ -14,16 +14,16 @@ local S = fsfcg.get_translator
 local Form = fsfcg.Form
 
 minetest.register_on_mods_loaded(function ()
-	if not flinv.enabled then return end
+	if not fsfcg.enabled then return end
 	local inventory_mod = flinv.inventory_mod
 	local supported_mod_list = { "sway", "sfinv", "inventory_plus" }
 	local supported_mod_set = {}
 	local supported_mod_string = ""
-	for _, inventory_mod in ipairs(supported_mod_list) do
-		supported_mod_set[inventory_mod] = true
-		supported_mod_string = supported_mod_string.."\n\t"..inventory_mod
+	for _, other_inventory_mod in ipairs(supported_mod_list) do
+		supported_mod_set[other_inventory_mod] = true
+		supported_mod_string = supported_mod_string.."\n\t"..other_inventory_mod
 	end
-	-- Note that all of the asserts I've made are _after_ we check `flinv.enabled`. This is because I'm nice.
+	-- Note that all of the asserts I've made are _after_ we check `fsfcg.enabled`. This is because I'm nice.
 	if not inventory_mod then
 		assert(false, "\n\n[fsfcraftguide]: requires an inventory mod. Try one of these: "..supported_mod_string.."\n")
 	end
