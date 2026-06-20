@@ -212,6 +212,33 @@ local function is_fuel(item)
 	return minetest.get_craft_result({method="fuel", items={item}}).time > 0
 end
 
+function fsfcg.set_recipes_on_data(data)
+	local item = data.recipe_item
+	local usages = fsfcg.usages_cache[item]
+	local recipes = fsfcg.recipes_cache[item]
+	if usages then
+		data.has_usages = true
+	else
+		data.has_usages = false
+	end
+	if recipes then
+		data.has_recipes = true
+	else
+		data.has_recipes = false
+	end
+	if data.show_usages and data.has_usages then
+		data.recipes = usages
+	elseif data.has_recipes then
+		data.show_usages = false
+		data.recipes = recipes
+	elseif data.has_usages then
+		data.show_usages = true
+		data.recipes = usages
+	else
+		data.recipes = {}
+	end
+	data.rnum = 1
+end
 
 function fsfcg.ItemButton(fields)
 	local item, element_name, groups = fields.item, fields.element_name, fields.groups
@@ -223,18 +250,9 @@ function fsfcg.ItemButton(fields)
 			label = groups and "\n" .. S"G" or "",
 			on_event = function (_, context)
 				local data = context.fsfcg
-				if item == data.prev_item then
-					data.show_usages = not data.show_usages
-				else
-					data.show_usages = nil
-				end
-				if data.show_usages then
-					data.recipes = fsfcg.usages_cache[item]
-				else
-					data.recipes = fsfcg.recipes_cache[item]
-				end
+				data.recipe_item = item
+				fsfcg.set_recipes_on_data(data)
 				data.prev_item = item
-				data.rnum = 1
 				return true
 			end
 		}

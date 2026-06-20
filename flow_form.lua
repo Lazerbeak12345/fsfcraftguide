@@ -107,6 +107,7 @@ end
 local function Recipes(fields)
 	local data = fields.data
 	local recipe = data.recipes[data.rnum]
+	if not recipe then return gui.Nil{} end
 	local function recipe_cb(_, c)
 		local data = assert(c.fsfcg, "fsfcg data must be present in context")
 		if data.rnum > #data.recipes then
@@ -133,19 +134,31 @@ local function Recipes(fields)
 			#data.recipes > 1 and gui.HBox{
 				CraftguideImageButton{
 					name = "recipe_prev", texture_name = "prev",
-					tooltip = S("Previous recipe"), on_event = function (...)
+					tooltip = S"Previous recipe", on_event = function (...)
 						data.rnum = data.rnum + -1
 						return recipe_cb(...)
 					end
 				},
 				CraftguideImageButton{
 					name = "recipe_next", texture_name = "next",
-					tooltip =  S("Next recipe"), on_event = function (...)
+					tooltip =  S"Next recipe", on_event = function (...)
 						data.rnum = data.rnum + 1
 						return recipe_cb(...)
 					end
 				}
 			} or gui.Nil{},
+			(data.has_recipes and data.has_usages)
+			and CraftguideImageButton{
+				name = "recipe_toggle", texture_name = "toggle",
+				tooltip = data.show_usages
+					and S"Show usages"
+					or S"Show recipes",
+				on_event = function (_, _--[[context]])
+					data.show_usages = not data.show_usages
+					fsfcg.set_recipes_on_data(data)
+					return true
+				end
+			} or gui.Nil{}
 		}
 	}
 end
@@ -212,11 +225,9 @@ function fsfcg.Form(_--[[fields]])
 			expand = true,
 			gui.Label{ label = S("No items to show.") }
 		},
-		data.recipes and Recipes{data = data} or gui.Label{
-			label = data.show_usages
-				and S("No usages.").."\n"..S("Click again to show recipes.")
-				or S("No recipes.").."\n"..S("Click again to show usages.")
-		}
+		(data.has_recipes or data.has_usages)
+		and Recipes{data = data}
+		or gui.Label{ label = S"No usages or recipes." }
 	}
 end
 
