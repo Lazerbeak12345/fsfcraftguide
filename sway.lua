@@ -2,11 +2,8 @@
 -- SPDX-FileCopyrightText: 2023-2026
 -- SPDX-FileContributor: Lazerbeak12345
 
-local fsfcg, minetest, sway, flow = fsfcg, minetest, sway, flow
-local S = fsfcg.get_translator
+local fsfcg, sway, flow = fsfcg, sway, flow
 local gui = flow.widgets
-
-local Form = fsfcg.Form
 
 -- BUG: this code has a race condition. If two mods replace a widget, there needs to be a way to ensure they both play
 -- nice.
@@ -24,7 +21,7 @@ function sway.Form(fields)
 			bgimg = "sway_bg_full.png",
 			bgimg_middle = 12,
 			padding = 0.4,
-			Form{}
+			fsfcg.form:embed{ name = "fsfcg" }
 		}
 	}
 end

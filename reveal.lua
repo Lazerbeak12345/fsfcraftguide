@@ -4,8 +4,7 @@
 -- SPDX-FileCopyrightText: 2023-2026
 -- SPDX-FileContributor: Lazerbeak12345
 
-local fsfcg = fsfcg
-local revealed_cache = {}
+local fsfcg, flow_extras, minetest, doc = fsfcg, flow_extras, minetest, doc
 
 
 local function item_has_groups(item_groups, groups)
@@ -20,20 +19,21 @@ end
 
 
 local function revealed_show_recipe(recipe, playername)
-	if not revealed_cache[playername] then
-		revealed_cache[playername] = {}
+	local context = flow_extras.get_context()
+	if context.revealed == nil then
+		context.revealed = {}
 	end
-	if revealed_cache[playername][recipe] then
+	if context.revealed[recipe] then
 		return true
 	end
 
-  local reg_items = minetest.registered_items
+	local reg_items = minetest.registered_items
 	local revealed = doc.data.players[playername].stored_data.revealed
 	for _, item in pairs(recipe.items) do
 		local is_revealed_item = false
 		if item:sub(1,6) == "group:" then
 			local groups = item:sub(7):split(",")
-			for cid, items in pairs(revealed) do
+			for _--[[cid]], items in pairs(revealed) do
 				for revealed_item in pairs(items) do
 					if reg_items[revealed_item] and item_has_groups(reg_items[revealed_item].groups, groups) then
 						is_revealed_item = true
@@ -45,7 +45,7 @@ local function revealed_show_recipe(recipe, playername)
 				end
 			end
 		else
-			for cid, items in pairs(revealed) do
+			for _--[[cid]], items in pairs(revealed) do
 				if items[item] then
 					is_revealed_item = true
 					break
@@ -57,21 +57,22 @@ local function revealed_show_recipe(recipe, playername)
 			return false
 		end
 	end
-	revealed_cache[playername][recipe] = true
+	context.revealed[recipe] = true
 	return true
 end
 
 
 local orig_get_usages = fsfcg.get_usages
-function fsfcg.get_usages(data, item)
-  local recipes = orig_get_usages(data, item)
+function fsfcg.get_usages(item)
+	local _--[[context]], player = flow_extras.get_context()
+	local recipes = orig_get_usages(item)
   if not recipes then
     return
   end
 
   local filtered = {}
   for _, recipe in ipairs(recipes) do
-    if revealed_show_recipe(recipe, data.playername) then
+		if revealed_show_recipe(recipe, player:get_player_name()) then
       table.insert(filtered, recipe)
     end
   end
@@ -82,45 +83,45 @@ end
 
 
 local orig_get_recipes = fsfcg.get_recipes
-function fsfcg.get_recipes(data, item)
-  local recipes = orig_get_recipes(data, item)
-  if not recipes then
-    return
-  end
+function fsfcg.get_recipes(item)
+	local _--[[context]], player = flow_extras.get_context()
+	local recipes = orig_get_recipes(item)
+	if not recipes then return end
 
-  local filtered = {}
-  for _, recipe in ipairs(recipes) do
-    if revealed_show_recipe(recipe, data.playername) then
-      table.insert(filtered, recipe)
-    end
-  end
-  if #filtered > 0 then
-    return filtered
-  end
+	local filtered = {}
+	for _, recipe in ipairs(recipes) do
+		if revealed_show_recipe(recipe, player:get_player_name()) then
+			table.insert(filtered, recipe)
+		end
+	end
+	if #filtered > 0 then
+		return filtered
+	end
 end
 
 
 local orig_execute_search = fsfcg.execute_search
-function fsfcg.execute_search(data)
-  -- Only needed if doc is an optional dependency
-  --
-  -- if not doc.data.players[data.playername] then
-  -- 	-- Hack. craftguide is loaded before doc mod. Therefore doc is not initialized yet
-  -- 	data.items = {}
-  -- 	minetest.after(0, sfcg.execute_search, data)
-  -- 	return
-  -- end
+function fsfcg.execute_search()
+	-- Only needed if doc is an optional dependency
+	--
+	-- if not doc.data.players[data.playername] then
+	-- 	-- Hack. craftguide is loaded before doc mod. Therefore doc is not initialized yet
+	-- 	data.items = {}
+	-- 	minetest.after(0, sfcg.execute_search, data)
+	-- 	return
+	-- end
 
-  orig_execute_search(data)
+	orig_execute_search()
 
-  local filtered_items = {}
-  for _, item in ipairs(data.items) do
-    if fsfcg.get_usages(data, item) or
-        fsfcg.get_recipes(data, item) then
-      table.insert(filtered_items, item)
-    end
-  end
-  data.items = filtered_items
+	local context = flow_extras.get_context()
+	local filtered_items = {}
+	for _, item in ipairs(context.items) do
+		if fsfcg.get_usages(item) or
+				fsfcg.get_recipes(item) then
+			table.insert(filtered_items, item)
+		end
+	end
+	context.items = filtered_items
 end
 
 -- Update sfinv inventory once in globalstep, if something revealed
@@ -144,8 +145,3 @@ function doc.mark_entry_as_revealed(playername, category_id, entry_id)
     end
   -- end
 end
-
-
-minetest.register_on_leaveplayer(function(player)
-	revealed_cache[player:get_player_name()] = nil
-end)

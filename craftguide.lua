@@ -8,8 +8,8 @@
 -- SPDX-FileCopyrightText: 2023-2026
 -- SPDX-FileContributor: Lazerbeak12345
 
-local fsfcg, flow, minetest = fsfcg, flow, minetest
-local S = fsfcg.get_translator
+local fsfcg, flow, minetest, flow_extras = fsfcg, flow, minetest, flow_extras
+local S = fsfcg._translator
 local gui = flow.widgets
 
 
@@ -72,32 +72,33 @@ local function imatch(str, filter)
 end
 
 
-function fsfcg.execute_search(data)
-  local init_items = fsfcg.init_items
-	local filter = data.filter
+function fsfcg.execute_search()
+	local context = flow_extras.get_context()
+	local init_items = fsfcg.init_items
+	local filter = context.filter
 	if filter == "" then
-		data.items = init_items
+		context.items = init_items
 		return
 	end
-	data.items = {}
+	context.items = {}
 
-  local reg_items = minetest.registered_items
+	local reg_items = minetest.registered_items
 	for _, item in ipairs(init_items) do
-    if imatch(item, filter) then
-      table.insert(data.items, item)
-    else
-      local def = reg_items[item]
-      local desc = def and def.description
-      if desc then
-        if imatch(desc, filter) then
-          table.insert(data.items, item)
-        else
-          local tr_desc = minetest.get_translated_string(data.lang_code, desc)
-          if tr_desc and imatch(tr_desc, filter) then
-            table.insert(data.items, item)
-          end
-        end
-      end
+		if imatch(item, filter) then
+			table.insert(context.items, item)
+		else
+			local def = reg_items[item]
+			local desc = def and def.description
+			if desc then
+				if imatch(desc, filter) then
+					table.insert(context.items, item)
+				else
+					local tr_desc = minetest.get_translated_string(context.lang_code, desc)
+					if tr_desc and imatch(tr_desc, filter) then
+						table.insert(context.items, item)
+					end
+				end
+			end
 		end
 	end
 end
@@ -222,19 +223,18 @@ function fsfcg.ItemButton(fields)
 			name = element_name,
 			label = groups and "\n" .. S"G" or "",
 			on_event = function (_, context)
-				local data = context.fsfcg
-				if item == data.prev_item then
-					data.show_usages = not data.show_usages
+				if item == context.prev_item then
+					context.show_usages = not context.show_usages
 				else
-					data.show_usages = nil
+					context.show_usages = nil
 				end
-				if data.show_usages then
-					data.recipes = fsfcg.usages_cache[item]
+				if context.show_usages then
+					context.recipes = fsfcg.usages_cache[item]
 				else
-					data.recipes = fsfcg.recipes_cache[item]
+					context.recipes = fsfcg.recipes_cache[item]
 				end
-				data.prev_item = item
-				data.rnum = 1
+				context.prev_item = item
+				context.rnum = 1
 				return true
 			end
 		}
@@ -265,11 +265,7 @@ end
 
 
 function fsfcg.update_for_player(playername)
-	local player = minetest.get_player_by_name(playername)
-	if player then
-		fsfcg.execute_search(fsfcg.player_data[playername])
-	end
-	return player
+	return minetest.get_player_by_name(playername)
 end
 
 
@@ -298,28 +294,4 @@ minetest.register_on_mods_loaded(function()
 	end
 	table.sort(init_items)
 
-end)
-
-
-minetest.register_on_joinplayer(function(player)
-	if not fsfcg.enabled then return end
-
-	local name = player:get_player_name()
-	local info = minetest.get_player_information(name)
-
-	local data = {
-		playername = name,
-		filter = "",
-		pagenum = 1,
-		items = fsfcg.init_items,
-		lang_code = info.lang_code
-	}
-	fsfcg.player_data[name] = data
-	fsfcg.execute_search(data)
-end)
-
-
-minetest.register_on_leaveplayer(function(player)
-	local name = player:get_player_name()
-	fsfcg.player_data[name] = nil
 end)

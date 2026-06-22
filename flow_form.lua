@@ -3,7 +3,7 @@
 -- SPDX-FileContributor: Lazerbeak12345
 
 local fsfcg, minetest, flow, flow_extras = fsfcg, minetest, flow, flow_extras
-local S = fsfcg.get_translator
+local S = fsfcg._translator
 local gui = flow.widgets
 
 local FLOW_SPACING = 0.25
@@ -104,15 +104,14 @@ local function Recipe(fields)
 	}
 end
 
-local function Recipes(fields)
-	local data = fields.data
-	local recipe = data.recipes[data.rnum]
-	local function recipe_cb(_, c)
-		local data = assert(c.fsfcg, "fsfcg data must be present in context")
-		if data.rnum > #data.recipes then
-			data.rnum = 1
-		elseif data.rnum == 0 then
-			data.rnum = #data.recipes
+local function Recipes(_--[[fields]])
+	local context = flow_extras.get_context()
+	local recipe = context.recipes[context.rnum]
+	local function recipe_cb(_, context)
+		if context.rnum > #context.recipes then
+			context.rnum = 1
+		elseif context.rnum == 0 then
+			context.rnum = #context.recipes
 		end
 		return true
 	end
@@ -126,23 +125,23 @@ local function Recipes(fields)
 		gui.Spacer{},
 		gui.VBox{
 			gui.Label{
-				label = data.show_usages
-					and S("Usage @1 of @2", data.rnum, #data.recipes)
-					or S("Recipe @1 of @2", data.rnum, #data.recipes)
+				label = context.show_usages
+					and S("Usage @1 of @2", context.rnum, #context.recipes)
+					or S("Recipe @1 of @2", context.rnum, #context.recipes)
 			},
-			#data.recipes > 1 and gui.HBox{
+			#context.recipes > 1 and gui.HBox{
 				CraftguideImageButton{
 					name = "recipe_prev", texture_name = "prev",
-					tooltip = S("Previous recipe"), on_event = function (...)
-						data.rnum = data.rnum + -1
-						return recipe_cb(...)
+					tooltip = S("Previous recipe"), on_event = function (player, context)
+						context.rnum = context.rnum + -1
+						return recipe_cb(player, context)
 					end
 				},
 				CraftguideImageButton{
 					name = "recipe_next", texture_name = "next",
-					tooltip =  S("Next recipe"), on_event = function (...)
-						data.rnum = data.rnum + 1
-						return recipe_cb(...)
+					tooltip =  S("Next recipe"), on_event = function (player, context)
+						context.rnum = context.rnum + 1
+						return recipe_cb(player, context)
 					end
 				}
 			} or gui.Nil{},
@@ -152,19 +151,18 @@ end
 
 function fsfcg.Form(_--[[fields]])
 	local context = flow_extras.get_context()
-	local name = context.player_name
-	local data = fsfcg.player_data[name] or { items = fsfcg.init_items }
-	context.fsfcg = data
+	if not context.items then
+		context.items = fsfcg.init_items
+	end
 	local w = 8
-	local items = data.items
+	local items = context.items
 
-	local function filter_cb(_, c)
-		local new = c.form.filter:lower()
-		if data.filter == new then
+	local function filter_cb(_, context)
+		local new = context.form.filter:lower()
+		if context.filter == new then
 			return
 		end
-		data.filter = new
-		fsfcg.execute_search(data)
+		context.filter = new
 		return true
 	end
 
@@ -173,7 +171,7 @@ function fsfcg.Form(_--[[fields]])
 		items_rendered = { w = w * (FLOW_SPACING + FLOW_SIZE), spacing = FLOW_SPACING }
 		local ItemButton = fsfcg.ItemButton
 
-		for _, item in ipairs(data.items) do
+		for _, item in ipairs(context.items) do
 			items_rendered[#items_rendered+1] = ItemButton{ item = item, element_name = item }
 		end
 		items_rendered = gui.Flow(items_rendered)
@@ -191,18 +189,18 @@ function fsfcg.Form(_--[[fields]])
 		gui.HBox{
 			gui.Field{
 				name = "filter",
-				default = data.filter,
+				default = context.filter,
 				on_event = filter_cb
 			},
 			CraftguideImageButton{ name = "search", tooltip = S("Search"), on_event = filter_cb },
 			CraftguideImageButton{
 				name = "clear", tooltip = S("Reset"),
-				on_event = function(_, c)
-					data.filter = ""
-					c.form.filter = data.filter
-					data.prev_item = nil
-					data.recipes = nil
-					data.items = fsfcg.init_items
+				on_event = function(_, context)
+					context.filter = ""
+					context.form.filter = context.filter
+					context.prev_item = nil
+					context.recipes = nil
+					context.items = fsfcg.init_items
 					return true
 				end
 			},
@@ -212,20 +210,29 @@ function fsfcg.Form(_--[[fields]])
 			expand = true,
 			gui.Label{ label = S("No items to show.") }
 		},
-		data.recipes and Recipes{data = data} or gui.Label{
-			label = data.show_usages
+		context.recipes and Recipes{} or gui.Label{
+			label = context.show_usages
 				and S("No usages.").."\n"..S("Click again to show recipes.")
 				or S("No recipes.").."\n"..S("Click again to show usages.")
 		}
 	}
 end
 
-local orig_update_for_player = fsfcg.update_for_player
-function fsfcg.update_for_player(playername)
-	local player = orig_update_for_player(playername)
-	-- TODO: this is incorrect
-	if player and minetest.global_exists"sway" and sway.enabled then
-		sway.set_player_inventory_formspec(player)
+fsfcg.form = flow.make_gui(function (player, context)
+	if context.filter == nil then
+		context.filter = ""
 	end
-	return player
-end
+	if context.pagenum == nil then
+		context.pagenum = 1
+	end
+	if context.items == nil then
+		context.items = fsfcg.init_items
+	end
+	if context.lang_code == nil then
+		local player_name = player:get_player_name()
+		local info = minetest.get_player_information(player_name)
+		context.lang_code = info.lang_code
+	end
+	fsfcg.execute_search()
+	return fsfcg.Form{}
+end)

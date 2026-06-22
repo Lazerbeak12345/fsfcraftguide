@@ -14,19 +14,18 @@ local modpath = minetest.get_modpath(minetest.get_current_modname())
 
 _G.fsfcg = {
 	modpath = modpath,
-	get_translator = S,
-	player_data = {},
+	_translator = S,
 	init_items = {},
 	recipes_cache = {},
 	usages_cache = {},
 	enabled = true
 }
 
-function fsfcg.get_usages(data, item)
+function fsfcg.get_usages(item)
 	return fsfcg.usages_cache[item]
 end
 
-function fsfcg.get_recipes(data, item)
+function fsfcg.get_recipes(item)
 	return fsfcg.recipes_cache[item]
 end
 
