@@ -216,6 +216,7 @@ end
 
 function fsfcg.ItemButton(fields)
 	local item, element_name, groups = fields.item, fields.element_name, fields.groups
+	local item_only = item:match"%S*"
 	local fs = {
 		gui.ItemImageButton{
 			w = 1.05, h = 1.05,
@@ -223,17 +224,11 @@ function fsfcg.ItemButton(fields)
 			name = element_name,
 			label = groups and "\n" .. S"G" or "",
 			on_event = function (_, context)
-				if item == context.prev_item then
-					context.show_usages = not context.show_usages
+				if item_only == context.prev_item then
+					context.prev_item = nil
 				else
-					context.show_usages = nil
+					context.prev_item = item_only
 				end
-				if context.show_usages then
-					context.recipes = fsfcg.usages_cache[item]
-				else
-					context.recipes = fsfcg.recipes_cache[item]
-				end
-				context.prev_item = item
 				context.rnum = 1
 				return true
 			end
@@ -253,7 +248,7 @@ function fsfcg.ItemButton(fields)
 			tooltip = S("Any item belonging to the group(s): @1", groupstr)
 		end
 	elseif is_fuel(item) then
-		local itemdef = minetest.registered_items[item:match("%S*")]
+		local itemdef = minetest.registered_items[item_only]
 		local desc = itemdef and itemdef.description or S("Unknown Item")
 		tooltip = desc.."\n"..minetest.colorize("orange", S("Fuel"))
 	end

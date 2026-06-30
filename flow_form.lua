@@ -105,9 +105,8 @@ local function Recipe(fields)
 end
 
 local function Recipes(_--[[fields]])
-	local context = flow_extras.get_context()
-	local recipe = context.recipes[context.rnum]
-	local function recipe_cb(_, context)
+	local function recipe_cb(_--[[player]], context)
+		if not context.recipes then return true end
 		if context.rnum > #context.recipes then
 			context.rnum = 1
 		elseif context.rnum == 0 then
@@ -115,6 +114,8 @@ local function Recipes(_--[[fields]])
 		end
 		return true
 	end
+	local context = flow_extras.get_context()
+	local recipe = context.recipes[context.rnum]
 	return gui.HBox{
 		Recipe{
 			width = recipe.width,
@@ -124,6 +125,8 @@ local function Recipes(_--[[fields]])
 		},
 		gui.Spacer{},
 		gui.VBox{
+			-- TODO: add better current item identification
+			gui.Label{ label = context.prev_item },
 			gui.Label{
 				label = context.show_usages
 					and S("Usage @1 of @2", context.rnum, #context.recipes)
@@ -145,6 +148,22 @@ local function Recipes(_--[[fields]])
 					end
 				}
 			} or gui.Nil{},
+			context.has_usages and context.has_recipes
+			and gui.Button{
+				label = context.show_usages
+					and S"Show recipes"
+					or S"Show usages",
+				on_event = function (player, context)
+					context.rnum = 1
+					context.show_usages = not context.show_usages
+					return recipe_cb(player, context)
+				end
+			}
+			or gui.Label{
+				label = context.has_recipes
+					and S"No usages."
+					or S"No recipes."
+			},
 		}
 	}
 end
@@ -176,7 +195,7 @@ function fsfcg.Form(_--[[fields]])
 		end
 		items_rendered = gui.Flow(items_rendered)
 		items_rendered.name = "craftguide_items"
-		items_rendered.h = 4
+		items_rendered.h = context.prev_item and 4 or 7
 		items_rendered = gui.ScrollableVBox(items_rendered)
 	end
 
@@ -210,11 +229,7 @@ function fsfcg.Form(_--[[fields]])
 			expand = true,
 			gui.Label{ label = S("No items to show.") }
 		},
-		context.recipes and Recipes{} or gui.Label{
-			label = context.show_usages
-				and S("No usages.").."\n"..S("Click again to show recipes.")
-				or S("No recipes.").."\n"..S("Click again to show usages.")
-		}
+		context.prev_item and Recipes{} or gui.Nil{},
 	}
 end
 
@@ -232,6 +247,25 @@ fsfcg.form = flow.make_gui(function (player, context)
 		local player_name = player:get_player_name()
 		local info = minetest.get_player_information(player_name)
 		context.lang_code = info.lang_code
+	end
+	if context.show_usages == nil then
+		context.show_usages = false
+	end
+	local item = context.prev_item
+	if item then
+		local recipes = fsfcg.recipes_cache[item]
+		local usages = fsfcg.usages_cache[item]
+		context.has_recipes = recipes ~= nil
+		context.has_usages = usages ~= nil
+		context.show_usages = context.show_usages and context.has_usages
+		if (not context.has_recipes) and (not context.show_usages) then
+			context.show_usages = true
+		end
+		if context.show_usages then
+			context.recipes = usages
+		else
+			context.recipes = recipes
+		end
 	end
 	fsfcg.execute_search()
 	return fsfcg.Form{}
