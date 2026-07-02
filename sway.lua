@@ -5,17 +5,15 @@
 local fsfcg, sway, flow = fsfcg, sway, flow
 local gui = flow.widgets
 
--- BUG: this code has a race condition. If two mods replace a widget, there needs to be a way to ensure they both play
--- nice.
 local OldSwayForm = sway.Form
 function sway.Form(fields)
 	if not fsfcg.enabled then
-		sway.Form = OldSwayForm
 		return OldSwayForm(fields)
 	end
 	fields.expand = true
 	return gui.HBox{
 		spacing = 0.25,
+		name = "fsfcg_sway_form_wrapper",
 		OldSwayForm(fields),
 		gui.VBox{
 			bgimg = "sway_bg_full.png",
