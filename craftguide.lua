@@ -213,17 +213,47 @@ local function is_fuel(item)
 	return minetest.get_craft_result({method="fuel", items={item}}).time > 0
 end
 
+function fsfcg.prepare_item_documentation(fields)
+	local item = fields.item
+	local item_only = fields.item_only
+	local groups = fields.groups
+	local fallback = fields.fallback
+
+	local text
+	if groups then
+		table.sort(groups)
+		text = group_names[table.concat(groups, ",")]
+		if not text then
+			local groupstr = {}
+			for _, group in ipairs(groups) do
+				table.insert(groupstr, minetest.colorize("yellow", group))
+			end
+			groupstr = table.concat(groupstr, ", ")
+			text = S("Any item belonging to the group(s): @1", groupstr)
+		end
+	elseif is_fuel(item) then
+		local itemdef = minetest.registered_items[item_only]
+		local desc = itemdef and itemdef.description or S("Unknown Item")
+		text = desc.."\n"..minetest.colorize("orange", S("Fuel"))
+	elseif fallback then
+		local itemdef = minetest.registered_items[item_only]
+		local desc = itemdef and itemdef.description or S("Unknown Item")
+		text = desc
+	end
+	return text
+end
 
 function fsfcg.ItemButton(fields)
-	local item, element_name, groups = fields.item, fields.element_name, fields.groups
+	local item, element_name, groups, clickable = fields.item, fields.element_name, fields.groups, fields.clickable
 	local item_only = item:match"%S*"
+	if clickable == nil then clickable = true end
 	local fs = {
-		gui.ItemImageButton{
+		gui[clickable and "ItemImageButton" or "ItemImage"]{
 			w = 1.05, h = 1.05,
 			item_name = item,
 			name = element_name,
 			label = groups and "\n" .. S"G" or "",
-			on_event = function (_, context)
+			on_event = clickable and function (_, context)
 				if item_only == context.prev_item then
 					context.prev_item = nil
 				else
@@ -231,27 +261,15 @@ function fsfcg.ItemButton(fields)
 				end
 				context.rnum = 1
 				return true
-			end
+			end or nil
 		}
 	}
 
-	local tooltip
-	if groups then
-		table.sort(groups)
-		tooltip = group_names[table.concat(groups, ",")]
-		if not tooltip then
-			local groupstr = {}
-			for _, group in ipairs(groups) do
-				table.insert(groupstr, minetest.colorize("yellow", group))
-			end
-			groupstr = table.concat(groupstr, ", ")
-			tooltip = S("Any item belonging to the group(s): @1", groupstr)
-		end
-	elseif is_fuel(item) then
-		local itemdef = minetest.registered_items[item_only]
-		local desc = itemdef and itemdef.description or S("Unknown Item")
-		tooltip = desc.."\n"..minetest.colorize("orange", S("Fuel"))
-	end
+	local tooltip = fsfcg.prepare_item_documentation{
+		item = item,
+		item_only = item_only,
+		groups = groups
+	}
 	if tooltip then
 		fs[#fs+1] = gui.Tooltip{ tooltip_text = tooltip, gui_element_name = element_name }
 	end

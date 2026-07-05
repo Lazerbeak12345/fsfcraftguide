@@ -41,6 +41,7 @@ local function RightArrow(_--[[fields]])
 end
 
 local function Recipe(fields)
+	local context = flow_extras.get_context()
 	local width = fields.width
 	local cooktime, shapeless
 
@@ -72,7 +73,13 @@ local function Recipe(fields)
 				item = fsfcg.groups_to_item(groups)
 				elem_name = item.."."..table.concat(groups, "+")
 			end
-			recipe_parts[#recipe_parts+1] = fsfcg.ItemButton{ item = item, element_name = elem_name, groups = groups }
+			recipe_parts[#recipe_parts+1] = fsfcg.ItemButton{
+				item = item,
+				element_name = elem_name,
+				groups = groups,
+				clickable = item:match"%S*" ~= context.prev_item
+				--clickable = not context.show_usages
+			}
 		else
 			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
@@ -99,7 +106,12 @@ local function Recipe(fields)
 		},
 		gui.VBox{
 			align_v = "center",
-			fsfcg.ItemButton{ item = fields.output, element_name = fields.output:match"%S*" }
+			fsfcg.ItemButton{
+				item = fields.output,
+				element_name = fields.output:match"%S*",
+				--clickable = fields.output:match"%S*" ~= context.prev_item
+				clickable = context.show_usages
+			}
 		}
 	}
 end
@@ -126,7 +138,22 @@ local function Recipes(_--[[fields]])
 		gui.Spacer{},
 		gui.VBox{
 			-- TODO: add better current item identification
-			gui.Label{ label = context.prev_item },
+			gui.HBox{
+				fsfcg.ItemButton{
+					item = context.prev_item,
+					element_name = context.prev_item:match"%S*",
+					clickable = false
+				},
+				gui.VBox(flow_extras.For(
+					fsfcg.prepare_item_documentation{
+						item = context.prev_item,
+						item_only = context.prev_item:match"%S*",
+						fallback = true,
+					}:gmatch"[^\n]+"
+				)(function (row)
+					return gui.Label{ label = row }
+				end))
+			},
 			gui.Label{
 				label = context.show_usages
 					and S("Usage @1 of @2", context.rnum, #context.recipes)
