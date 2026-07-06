@@ -77,13 +77,14 @@ local function Recipe(fields)
 				item = item,
 				element_name = elem_name,
 				groups = groups,
-				clickable = item:match"%S*" ~= context.prev_item
-				--clickable = not context.show_usages
+				clickable = fsfcg.get_item_canonical_name(item) ~= context.prev_item
 			}
 		else
 			recipe_parts[#recipe_parts+1] = gui.Box{ color = "grey", w = FLOW_SIZE, h = FLOW_SIZE }
 		end
 	end
+
+	local canonical_output_item_name = fsfcg.get_item_canonical_name(fields.output)
 
 	return gui.HBox{
 		gui.Flow(recipe_parts),
@@ -108,9 +109,8 @@ local function Recipe(fields)
 			align_v = "center",
 			fsfcg.ItemButton{
 				item = fields.output,
-				element_name = fields.output:match"%S*",
-				--clickable = fields.output:match"%S*" ~= context.prev_item
-				clickable = context.show_usages
+				element_name = canonical_output_item_name,
+				clickable = canonical_output_item_name ~= context.prev_item
 			}
 		}
 	}

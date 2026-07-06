@@ -72,6 +72,18 @@ local function imatch(str, filter)
 end
 
 
+function fsfcg.get_item_canonical_name(item)
+	local item_only = item:match"%S*"
+	local alias = minetest.registered_aliases[item_only]
+	-- In case of alias chains
+	while alias do
+		item_only = alias
+		alias = minetest.registered_aliases[item_only]
+	end
+	return item_only
+end
+
+
 function fsfcg.execute_search()
 	local context = flow_extras.get_context()
 	local init_items = fsfcg.init_items
@@ -245,7 +257,7 @@ end
 
 function fsfcg.ItemButton(fields)
 	local item, element_name, groups, clickable = fields.item, fields.element_name, fields.groups, fields.clickable
-	local item_only = item:match"%S*"
+	local item_only = fsfcg.get_item_canonical_name(item)
 	if clickable == nil then clickable = true end
 	local fs = {
 		gui[clickable and "ItemImageButton" or "ItemImage"]{
