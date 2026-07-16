@@ -10,8 +10,6 @@ SPDX-FileCopyrightText: 2023-2026
 SPDX-FileContributor: Lazerbeak12345
 -->
 
-<!--![luacheck](https://github.com/dacmot/sfcraftguide/actions/workflows/luacheck.yml/badge.svg)-->
-
 # fsfcraftguide
 
 > [!IMPORTANT]
@@ -27,11 +25,15 @@ SPDX-FileContributor: Lazerbeak12345
 An augmented [mtg_craftguide]. Supports a progressive reveal system that follows the documentation mod item help. Uses [flow] to render the formspecs.
 
 Based on [sfcraftguide] which itself is based on [mtg_craftguide], which is in turn based on [craftguide].
+See more in this diagram:
+
+![Gantt chart of craftguide family tree][gantt]
 
 [flow]: https://github.com/luk3yx/minetest-flow
 [sfcraftguide]: https://github.com/dacmot/sfcraftguide
 [mtg_craftguide]: https://github.com/minetest/minetest_game
 [craftguide]: https://github.com/minetest-mods/craftguide
+[gantt]: ./extra_media/history.png
 
 ## Features
 
