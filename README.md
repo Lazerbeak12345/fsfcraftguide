@@ -37,7 +37,7 @@ See more in this diagram:
 
 ## Features
 
-Adds a "Recipes" tab to the sfinv inventory. Click an item to see it's recipes. Click again to show usages.
+Adds a "Recipes" tab to the sfinv inventory. Click an item to see its recipes. Click again to show usages.
 
 Recipes reveal will be synchronized with the doc items discovered ([doc/help](https://forum.minetest.net/viewtopic.php?f=11&t=15912))
 
@@ -49,7 +49,7 @@ This project is brought to you thanks in part to these artists:
     - paramat
     - Neuromancer
     - Wuzzy
-- Thumnail Art:
+- Thumbnail Art:
     - dacmot
 
 _The media in this project conforms to the REUSE specification. For more detailed information about the media licencing, consult the machine & human readable SPDX annotations used in the project_.
